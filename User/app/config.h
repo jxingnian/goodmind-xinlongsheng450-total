@@ -16,7 +16,7 @@ extern "C"
 
 #include <stdio.h>
 #include "stm32f1xx_hal.h"
-#include "Types.h"
+#include "types.h"
 #include "device.h"
 
 #define SOCK_DHCP             0

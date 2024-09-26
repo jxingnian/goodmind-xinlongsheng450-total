@@ -81,7 +81,7 @@
           </BeforeMake>
           <AfterMake>
             <RunUserProg1>0</RunUserProg1>
-            <RunUserProg2>0</RunUserProg2>
+            <RunUserProg2>1</RunUserProg2>
             <UserProg1Name></UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../User/app;../User/bsp/bsp_uart;../User/os;../User/utils;../User/Internet/W5500;../User/Internet/device;../User/Internet/socket;../User/Internet/spi</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../User/app;../User/bsp/bsp_uart;../User/os;../User/utils;../User/Internet/W5500;../User/Internet/device;../User/Internet/socket;../User/Internet/spi;../User/bsp/bsp_hmi;../User/HMI_DRIVE</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -754,11 +754,6 @@
               <FilePath>..\User\app\app_udp.c</FilePath>
             </File>
             <File>
-              <FileName>types.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\User\app\types.h</FilePath>
-            </File>
-            <File>
               <FileName>app_pis_proc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\app\app_pis_proc.c</FilePath>
@@ -823,6 +818,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\bsp\bsp_uart\bsp_uart.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_hmi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_hmi\bsp_hmi.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -847,6 +847,26 @@
               <FileName>spi2.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\Internet\spi\spi2.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>USER/dacai</GroupName>
+          <Files>
+            <File>
+              <FileName>cmd_queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\HMI_DRIVE\cmd_queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>hmi_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\HMI_DRIVE\hmi_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>hmi_user_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\HMI_DRIVE\hmi_user_uart.c</FilePath>
             </File>
           </Files>
         </Group>

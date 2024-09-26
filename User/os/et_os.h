@@ -63,7 +63,6 @@ typedef struct {
     uint8_t     payload_data[24];
 } et_uart_send_req_t;
 
-#define DEBUG_UART      1  // 调试串口
 #define LEFT_CTRL_UART  2  // 左侧主控串口
 #define RIGHT_CTRL_UART 4  // 右侧主控串口
 

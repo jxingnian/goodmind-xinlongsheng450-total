@@ -62,7 +62,6 @@ static int32_t push_uart_send_data(int uart_id, uart_send_data_t *data);
  * private variables
  ******************************************************************************/
 
-ring_buffer_t *rb_uart1_send = NULL;
 ring_buffer_t *rb_uart2_send = NULL;
 ring_buffer_t *rb_uart4_send = NULL;
 
@@ -82,7 +81,7 @@ static tmr_t tmr_uart_send_rb;
  */
 void uart_apec_send_data(int uart_id, const uint8_t *payload_data, uint8_t payload_len)
 {
-    if(uart_id == DEBUG_UART || uart_id == LEFT_CTRL_UART || uart_id == RIGHT_CTRL_UART){
+    if(uart_id == LEFT_CTRL_UART || uart_id == RIGHT_CTRL_UART){
         // 发送打包信息到队列, 发送队列定时器再执行发送
         uart_send_data_t send_data;
         send_data.uc_data_len = payload_len;
@@ -95,7 +94,6 @@ void uart_apec_send_data(int uart_id, const uint8_t *payload_data, uint8_t paylo
 void uart_spec_init(void)
 {
     // 初始化三个发送队列
-    rb_init(&rb_uart1_send, sizeof(uart_send_data_t) * UART_SEND_RB_SIZE);
     rb_init(&rb_uart2_send, sizeof(uart_send_data_t) * UART_SEND_RB_SIZE);
     rb_init(&rb_uart4_send, sizeof(uart_send_data_t) * UART_SEND_RB_SIZE);
     // 启动发送队列定时器
@@ -106,11 +104,6 @@ void uart_spec_init(void)
 static void tmr_uart_send_rb_timeout(int timer_id, void *data)
 {
     uart_send_data_t send_data;
-    if (rb_uart_send_unread_pos_count(DEBUG_UART) > 0 && bsp_uart_get_uart_idle(0)) {
-        if (pop_uart_send_data(DEBUG_UART, &send_data)) {
-            bsp_uart1_dma_send(send_data.uca_data, send_data.uc_data_len);
-        }
-    }
     if (rb_uart_send_unread_pos_count(LEFT_CTRL_UART) > 0 && bsp_uart_get_uart_idle(1)) {
         if (pop_uart_send_data(LEFT_CTRL_UART, &send_data)) {
             bsp_uart2_dma_send(send_data.uca_data, send_data.uc_data_len);
@@ -127,9 +120,6 @@ int32_t push_uart_send_data(int uart_id, uart_send_data_t *data)
 {
     ring_buffer_t *rb;
     switch(uart_id) {
-        case DEBUG_UART:
-            rb = rb_uart1_send;
-            break;
         case LEFT_CTRL_UART:
             rb = rb_uart2_send;
             break;
@@ -146,9 +136,6 @@ static int32_t pop_uart_send_data(int uart_id, uart_send_data_t *data)
 {
     ring_buffer_t *rb;
     switch(uart_id) {
-        case DEBUG_UART:
-            rb = rb_uart1_send;
-            break;
         case LEFT_CTRL_UART:
             rb = rb_uart2_send;
             break;
@@ -165,9 +152,6 @@ static int32_t rb_uart_send_unread_pos_count(int uart_id)
 {
     ring_buffer_t *rb;
     switch(uart_id) {
-        case DEBUG_UART:
-            rb = rb_uart1_send;
-            break;
         case LEFT_CTRL_UART:
             rb = rb_uart2_send;
             break;

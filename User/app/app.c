@@ -19,6 +19,10 @@
  *
  */
 #include "app.h"
+#include "hmi_driver.h"
+#include "hmi_user_uart.h"
+#include "bsp_hmi.h"
+
 static tmr_t tmr_timeout_d5s;
 
 static void start_timeout_timer(void); // Æô¶¯²âÊÔ¶¨Ê±Æ÷
@@ -37,6 +41,9 @@ static int app_init(void)
 
     uart_spec_init();
     bsp_uart_start_recv_all();
+
+    start_dacai_uart_handle();
+
     app_udp_init();
     logic_proc_init();
     

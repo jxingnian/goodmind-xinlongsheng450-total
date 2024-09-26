@@ -24,6 +24,9 @@
 #include "uart_parse.h"
 #include "uart_spec.h"
 #include "usart.h"
+#include "hmi_driver.h"
+#include "hmi_user_uart.h"
+#include "cmd_queue.h"
 /*******************************************************************************
  * private define macro and struct types
  ******************************************************************************/
@@ -194,8 +197,10 @@ static void et_proc_request(et_request_t *req)
 
     switch (req->type) {
     case ET_REQ_UART_RECV:
-				if(req->msg.uart_recv_req.huart == &huart1){
-						uart1_recv_data(req->msg.uart_recv_req.data, req->msg.uart_recv_req.data_len);
+        if(req->msg.uart_recv_req.huart == &huart1){
+            for (int i = 0; i < req->msg.uart_recv_req.data_len; i++) {
+                queue_push(req->msg.uart_recv_req.data[i]);
+            }
 				}else
 				if(req->msg.uart_recv_req.huart == &huart2){
 						uart2_recv_data(req->msg.uart_recv_req.data, req->msg.uart_recv_req.data_len);

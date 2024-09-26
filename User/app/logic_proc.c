@@ -46,8 +46,6 @@ static void send_command(uint8_t cmd, uint8_t addr);
 static tmr_t tmr_logic_task;
 
 
-
-
 static void logic_task(int timer_id, void *data)
 {
     static uint8_t current_cmd = CMD_QUERY_ALL;
