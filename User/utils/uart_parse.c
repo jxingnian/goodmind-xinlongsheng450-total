@@ -73,7 +73,7 @@ uart_context_t uart3_ctx = {0};
 
 void uart1_recv_data(const uint8_t *buf, int len)
 {
-//		printf("uart1_recv_data\n");
+//      printf("uart1_recv_data\n");
 }
 void uart2_recv_data(const uint8_t *buf, int len)
 {
@@ -92,7 +92,7 @@ void uart4_recv_data(const uint8_t *buf, int len)
 // */
 //static void uart_recv_data(uart_context_t *ctx, const uint8_t *buf, int len)
 //{
-// 
+//
 //}
 
 

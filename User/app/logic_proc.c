@@ -4,9 +4,9 @@
  * @LastEditors: XingNian j_xingnian@163.com
  * @LastEditTime: 2024-09-12 13:07:45
  * @FilePath: \Projectc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\logic_proc.c
- * @Description: 
- * 
- * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  */
 #include "logic_proc.h"
 #include "et_os.h"
@@ -61,7 +61,7 @@ static void logic_task(int timer_id, void *data)
         send_data_to_pis(NULL, 3);
         send_data_to_pis(NULL, 3);
         send_data_to_pis(NULL, 3);
-        current_time=0;
+        current_time = 0;
     }
 }
 
@@ -73,13 +73,12 @@ void logic_proc_init(void)
 
 uint8_t xor_crc(uint8_t *puchMsg, uint16_t usDataLen)
 {
-	uint8_t _dat = 0;
-	uint16_t i = 0;
-	for(i = 0; i < usDataLen;i++)
-	{
-		_dat = _dat ^ puchMsg[i];
-	}
-	return _dat;
+    uint8_t _dat = 0;
+    uint16_t i = 0;
+    for (i = 0; i < usDataLen; i++) {
+        _dat = _dat ^ puchMsg[i];
+    }
+    return _dat;
 }
 
 // 发送命令的函数
@@ -92,7 +91,7 @@ static void send_command(uint8_t cmd, uint8_t addr)
     tx_buf[1] = 0x7B;
     tx_buf[2] = cmd;
     tx_buf[3] = addr;
-    tx_buf[4] = xor_crc(&tx_buf[2], 2); 
+    tx_buf[4] = xor_crc(&tx_buf[2], 2);
     tx_buf[5] = 0x7D;
     tx_buf[6] = 0x7D;
 
@@ -102,7 +101,7 @@ static void send_command(uint8_t cmd, uint8_t addr)
     } else {
         uart_send_data.uart_id = RIGHT_CTRL_UART; // 假设RIGHT_UART已定义为右侧UART的ID
     }
-		
+
     uart_send_data.payload_len = 7;
     memcpy(uart_send_data.payload_data, tx_buf, 7);
     ET_POST_REQUEST(ET_REQ_UART_SEND, &uart_send_data, sizeof(et_uart_send_req_t), NULL, NULL);

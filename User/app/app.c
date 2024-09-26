@@ -4,9 +4,9 @@
  * @LastEditors: XingNian j_xingnian@163.com
  * @LastEditTime: 2024-09-12 12:00:25
  * @FilePath: \Projectc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\app.c
- * @Description: 
- * 
- * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  */
 /**
  * @file app.c
@@ -46,7 +46,7 @@ static int app_init(void)
 
     app_udp_init();
     logic_proc_init();
-    
+
     return 0;
 }
 
@@ -65,18 +65,18 @@ static void tmr_timeout_d5s_loop(int timer_id, void *data)
     HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     // 获取编码器的值
     volatile static uint8_t encoder_value = 0;
-    
+
     // 读取PB5、PB4、PB3、PD2的状态（低电平有效）
     volatile uint8_t pb5 = !HAL_GPIO_ReadPin(BCD_4_GPIO_Port, BCD_4_Pin);
     volatile uint8_t pb4 = !HAL_GPIO_ReadPin(BCD_3_GPIO_Port, BCD_3_Pin);
     volatile uint8_t pb3 = !HAL_GPIO_ReadPin(BCD_2_GPIO_Port, BCD_2_Pin);
     volatile uint8_t pd2 = !HAL_GPIO_ReadPin(BCD_1_GPIO_Port, BCD_1_Pin);
-    
+
     // 将四个引脚的状态组合成一个4位的BCD码（8421码）
     encoder_value = (pb5 << 3) | (pb4 << 2) | (pb3 << 1) | pd2;
-    
+
     // BCD码转换为十进制
-    if(encoder_value <= 9) {
+    if (encoder_value <= 9) {
         g_total_controller_address = encoder_value;
     } else {
         g_total_controller_address = 0; // 如果是无效的BCD码，设置为默认值0

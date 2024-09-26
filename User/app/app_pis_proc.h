@@ -4,9 +4,9 @@
  * @LastEditors: XingNian j_xingnian@163.com
  * @LastEditTime: 2024-09-12 13:04:00
  * @FilePath: \Projectc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\app_pis_proc.h
- * @Description: 
- * 
- * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  */
 #ifndef _APP_PIS_PROC_H__
 #define _APP_PIS_PROC_H__

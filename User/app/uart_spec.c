@@ -81,7 +81,7 @@ static tmr_t tmr_uart_send_rb;
  */
 void uart_apec_send_data(int uart_id, const uint8_t *payload_data, uint8_t payload_len)
 {
-    if(uart_id == LEFT_CTRL_UART || uart_id == RIGHT_CTRL_UART){
+    if (uart_id == LEFT_CTRL_UART || uart_id == RIGHT_CTRL_UART) {
         // 发送打包信息到队列, 发送队列定时器再执行发送
         uart_send_data_t send_data;
         send_data.uc_data_len = payload_len;
@@ -119,15 +119,15 @@ static void tmr_uart_send_rb_timeout(int timer_id, void *data)
 int32_t push_uart_send_data(int uart_id, uart_send_data_t *data)
 {
     ring_buffer_t *rb;
-    switch(uart_id) {
-        case LEFT_CTRL_UART:
-            rb = rb_uart2_send;
-            break;
-        case RIGHT_CTRL_UART:
-            rb = rb_uart4_send;
-            break;
-        default:
-            return -1;
+    switch (uart_id) {
+    case LEFT_CTRL_UART:
+        rb = rb_uart2_send;
+        break;
+    case RIGHT_CTRL_UART:
+        rb = rb_uart4_send;
+        break;
+    default:
+        return -1;
     }
     return rb_push_back(rb, (char *)data, sizeof(uart_send_data_t), 1);
 }
@@ -135,15 +135,15 @@ int32_t push_uart_send_data(int uart_id, uart_send_data_t *data)
 static int32_t pop_uart_send_data(int uart_id, uart_send_data_t *data)
 {
     ring_buffer_t *rb;
-    switch(uart_id) {
-        case LEFT_CTRL_UART:
-            rb = rb_uart2_send;
-            break;
-        case RIGHT_CTRL_UART:
-            rb = rb_uart4_send;
-            break;
-        default:
-            return -1;
+    switch (uart_id) {
+    case LEFT_CTRL_UART:
+        rb = rb_uart2_send;
+        break;
+    case RIGHT_CTRL_UART:
+        rb = rb_uart4_send;
+        break;
+    default:
+        return -1;
     }
     return rb_pop_front(rb, (char *)data, sizeof(uart_send_data_t), 1) / sizeof(uart_send_data_t);
 }
@@ -151,15 +151,15 @@ static int32_t pop_uart_send_data(int uart_id, uart_send_data_t *data)
 static int32_t rb_uart_send_unread_pos_count(int uart_id)
 {
     ring_buffer_t *rb;
-    switch(uart_id) {
-        case LEFT_CTRL_UART:
-            rb = rb_uart2_send;
-            break;
-        case RIGHT_CTRL_UART:
-            rb = rb_uart4_send;
-            break;
-        default:
-            return -1;
+    switch (uart_id) {
+    case LEFT_CTRL_UART:
+        rb = rb_uart2_send;
+        break;
+    case RIGHT_CTRL_UART:
+        rb = rb_uart4_send;
+        break;
+    default:
+        return -1;
     }
     uint32_t size = rb_count(rb);
     return size / sizeof(uart_send_data_t);

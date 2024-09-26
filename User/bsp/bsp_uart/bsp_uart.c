@@ -40,7 +40,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         memcpy(uart_recv_data.data, &g_ucaRcvBuff[0][0], Size);
         ET_POST_REQUEST(ET_REQ_UART_RECV, &uart_recv_data, sizeof(et_uart_recv_req_t), NULL, NULL);
         HAL_UARTEx_ReceiveToIdle_DMA(&huart1, &g_ucaRcvBuff[0][0], RCV_BUFF_SIZE);
-    }else if (huart == &huart2) {
+    } else if (huart == &huart2) {
         et_uart_recv_req_t uart_recv_data = {
             .huart = huart,
             .data_len = Size,
@@ -48,7 +48,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         memcpy(uart_recv_data.data, &g_ucaRcvBuff[1][0], Size);
         ET_POST_REQUEST(ET_REQ_UART_RECV, &uart_recv_data, sizeof(et_uart_recv_req_t), NULL, NULL);
         HAL_UARTEx_ReceiveToIdle_DMA(&huart2, &g_ucaRcvBuff[1][0], RCV_BUFF_SIZE);
-    }else if (huart == &huart4) {
+    } else if (huart == &huart4) {
         et_uart_recv_req_t uart_recv_data = {
             .huart = huart,
             .data_len = Size,
@@ -63,9 +63,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     if (huart == &huart1) {
         HAL_UARTEx_ReceiveToIdle_DMA(&huart1, &g_ucaRcvBuff[0][0], RCV_BUFF_SIZE);
-    }else if (huart == &huart2) {
+    } else if (huart == &huart2) {
         HAL_UARTEx_ReceiveToIdle_DMA(&huart2, &g_ucaRcvBuff[1][0], RCV_BUFF_SIZE);
-    }else if (huart == &huart4) {
+    } else if (huart == &huart4) {
         HAL_UARTEx_ReceiveToIdle_DMA(&huart4, &g_ucaRcvBuff[2][0], RCV_BUFF_SIZE);
     }
 }
@@ -81,53 +81,53 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart == &huart1) {
         s_flag_uart_idle[0] = 1;
-    }else if (huart == &huart2) {
+    } else if (huart == &huart2) {
         s_flag_uart_idle[1] = 1;
-    }else if (huart == &huart4) {
+    } else if (huart == &huart4) {
         s_flag_uart_idle[2] = 1;
     }
 }
 
- void bsp_uart1_dma_send(uint8_t *data, uint8_t data_len)
- {
-     memcpy(&g_ucaSendBuff[0][0], data, data_len);
-     s_flag_uart_idle[0] = 0;
-     HAL_UART_Transmit_DMA(&huart1, &g_ucaSendBuff[0][0], data_len);
- }
+void bsp_uart1_dma_send(uint8_t *data, uint8_t data_len)
+{
+    memcpy(&g_ucaSendBuff[0][0], data, data_len);
+    s_flag_uart_idle[0] = 0;
+    HAL_UART_Transmit_DMA(&huart1, &g_ucaSendBuff[0][0], data_len);
+}
 
- void bsp_uart2_dma_send(uint8_t *data, uint8_t data_len)
- {
-     memcpy(&g_ucaSendBuff[1][0], data, data_len);
-     s_flag_uart_idle[1] = 0;
-     HAL_UART_Transmit_DMA(&huart2, &g_ucaSendBuff[1][0], data_len);
- }
+void bsp_uart2_dma_send(uint8_t *data, uint8_t data_len)
+{
+    memcpy(&g_ucaSendBuff[1][0], data, data_len);
+    s_flag_uart_idle[1] = 0;
+    HAL_UART_Transmit_DMA(&huart2, &g_ucaSendBuff[1][0], data_len);
+}
 
- void bsp_uart4_dma_send(uint8_t *data, uint8_t data_len)
- {
-     memcpy(&g_ucaSendBuff[2][0], data, data_len);
-     s_flag_uart_idle[2] = 0;
-     HAL_UART_Transmit_DMA(&huart4, &g_ucaSendBuff[2][0], data_len);
- }
+void bsp_uart4_dma_send(uint8_t *data, uint8_t data_len)
+{
+    memcpy(&g_ucaSendBuff[2][0], data, data_len);
+    s_flag_uart_idle[2] = 0;
+    HAL_UART_Transmit_DMA(&huart4, &g_ucaSendBuff[2][0], data_len);
+}
 
 int  bsp_uart_get_uart_idle(uint8_t uart_id)
 {
     return s_flag_uart_idle[uart_id];
 }
 
- ///重定向c库函数printf到串口DEBUG_USART，重定向后可使用printf函数
- int fputc(int ch, FILE *f)
- {
-     /* 发送一个字节数据到串口DEBUG_USART */
-     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 1000);
+///重定向c库函数printf到串口DEBUG_USART，重定向后可使用printf函数
+int fputc(int ch, FILE *f)
+{
+    /* 发送一个字节数据到串口DEBUG_USART */
+    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 1000);
 
-     return (ch);
- }
+    return (ch);
+}
 
- ///重定向c库函数scanf到串口DEBUG_USART，重写向后可使用scanf、getchar等函数
- int fgetc(FILE *f)
- {
+///重定向c库函数scanf到串口DEBUG_USART，重写向后可使用scanf、getchar等函数
+int fgetc(FILE *f)
+{
 
-     int ch;
-     HAL_UART_Receive(&huart1, (uint8_t *)&ch, 1, 1000);
-     return (ch);
- }
+    int ch;
+    HAL_UART_Receive(&huart1, (uint8_t *)&ch, 1, 1000);
+    return (ch);
+}

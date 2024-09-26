@@ -4,9 +4,9 @@
  * @LastEditors: XingNian j_xingnian@163.com
  * @LastEditTime: 2024-09-12 12:00:39
  * @FilePath: \Projectc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\app.h
- * @Description: 
- * 
- * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved. 
+ * @Description:
+ *
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  */
 /**
  * @file app.h

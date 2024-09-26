@@ -20,23 +20,23 @@ extern "C"
 #include "device.h"
 
 #define SOCK_DHCP             0
-#define SOCK_HTTP             1							 
+#define SOCK_HTTP             1
 
-#define ON	                 	1
-#define OFF	                 	0
-#define HIGH	           	 		1
-#define LOW		             		0
+#define ON                      1
+#define OFF                     0
+#define HIGH                        1
+#define LOW                         0
 
 #define W5500_CS_PIN GPIO_PIN_12    /* W5500片选引脚 */
 #define W5500_CS_PORT GPIOB         /* W5500片选端口 */
 
 #define CONFIG_MSG_LEN        sizeof(CONFIG_MSG) - 4 // the 4 bytes OP will not save to EEPROM
 
-#define MAX_BUF_SIZE		 			1460
-#define KEEP_ALIVE_TIME	     	30	// 30sec
-#define SOCK_BUF_ADDR 	      0x20000000
+#define MAX_BUF_SIZE                    1460
+#define KEEP_ALIVE_TIME         30  // 30sec
+#define SOCK_BUF_ADDR         0x20000000
 #define AppBackAddress        0x08020000 //from 128K
-#define ConfigAddr		      	0x0800FC00
+#define ConfigAddr              0x0800FC00
 
 #define NORMAL_STATE          0
 #define NEW_APP_IN_BACK       1 //there is new app in back address
@@ -45,8 +45,7 @@ extern "C"
 
 #pragma pack(1)  // 使结构体按1字节对齐，确保结构体紧凑存储
 
-typedef struct _CONFIG_MSG
-{
+typedef struct _CONFIG_MSG {
     uint8 op[4];     // 操作码，用于标识不同的操作类型，如 FIND、SETT、FACT 等
     uint8 mac[6];    // MAC地址，6字节
     uint8 sw_ver[2]; // 软件版本号，2字节

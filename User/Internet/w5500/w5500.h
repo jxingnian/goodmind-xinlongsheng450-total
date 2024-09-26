@@ -4,14 +4,14 @@
 #include "Types.h"
 /**
  @brief Mode Register address
- * W5500 SPI Frame consists of 16bits Offset Address in Address Phase, 
+ * W5500 SPI Frame consists of 16bits Offset Address in Address Phase,
  * 8bits Control Phase and N bytes Data Phase.
  * 0                8                16               24                   ~
  * |----------------|----------------|----------------|----------------------
  * |        16bit offset Address     | Control Bits   |  Data Phase
  *
- * The 8bits Control Phase is reconfigured with Block Select bits (BSB[4:0]), 
- * Read/Write Access Mode bit (RWB) and SPI Operation Mode (OM[1:0]). 
+ * The 8bits Control Phase is reconfigured with Block Select bits (BSB[4:0]),
+ * Read/Write Access Mode bit (RWB) and SPI Operation Mode (OM[1:0]).
  * Block Select bits select a block as like common register, socket register, tx buffer and tx buffer.
  * Address value is defined as 16bit offset Address, BSB[4:0] and the three bits of zero-padding.(The RWB and OM [1:0] are '0 'padding)
  * Please, refer to W5500 datasheet for more detail about Memory Map.
@@ -70,7 +70,7 @@
 /**
  @brief Socket Interrupt Register
  */
-#define SIR                         (0x001700) 
+#define SIR                         (0x001700)
 /**
  @brief Socket Interrupt Mask Register
  */
@@ -130,7 +130,7 @@
 /**
  @brief chip version register address
  */
-#define VERSIONR                    (0x003900)   
+#define VERSIONR                    (0x003900)
 
 
 
@@ -182,12 +182,12 @@
  */
 #define Sn_MSSR0(ch)                    (0x001208 + (ch<<5))
 #define Sn_MSSR1(ch)                    (0x001308 + (ch<<5))
-/** 
- @brief IP Type of Service(TOS) Register 
+/**
+ @brief IP Type of Service(TOS) Register
  */
 #define Sn_TOS(ch)                      (0x001508 + (ch<<5))
 /**
- @brief IP Time to live(TTL) Register 
+ @brief IP Time to live(TTL) Register
  */
 #define Sn_TTL(ch)                      (0x001608 + (ch<<5))
 /**
@@ -268,7 +268,7 @@
 #define Sn_MR_BCASTB                 0x40     /**< Broadcast blcok in UDP Multicating */
 #define Sn_MR_MULTI                  0x80     /**< support UDP Multicating */
 
- /* Sn_MR values on MACRAW MODE */
+/* Sn_MR values on MACRAW MODE */
 #define Sn_MR_MIP6N                  0x10     /**< IPv6 packet Block */
 #define Sn_MR_MMB                    0x20     /**< IPv4 Multicasting Block */
 //#define Sn_MR_BCASTB                 0x40     /**< Broadcast blcok */
@@ -287,18 +287,18 @@
 #define Sn_CR_RECV                   0x40     /**< update rxbuf pointer, recv data */
 
 #ifdef __DEF_IINCHIP_PPP__
-   #define Sn_CR_PCON                0x23      
-   #define Sn_CR_PDISCON             0x24      
-   #define Sn_CR_PCR                 0x25      
-   #define Sn_CR_PCN                 0x26     
-   #define Sn_CR_PCJ                 0x27     
+#define Sn_CR_PCON                0x23
+#define Sn_CR_PDISCON             0x24
+#define Sn_CR_PCR                 0x25
+#define Sn_CR_PCN                 0x26
+#define Sn_CR_PCJ                 0x27
 #endif
 
 /* Sn_IR values */
 #ifdef __DEF_IINCHIP_PPP__
-   #define Sn_IR_PRECV               0x80     
-   #define Sn_IR_PFAIL               0x40     
-   #define Sn_IR_PNEXT               0x20     
+#define Sn_IR_PRECV               0x80
+#define Sn_IR_PFAIL               0x40
+#define Sn_IR_PNEXT               0x20
 #endif
 
 #define Sn_IR_SEND_OK                0x10     /**< complete sending */
@@ -339,14 +339,14 @@
 /*********************************************************
 * iinchip access function
 *********************************************************/
-void IINCHIP_WRITE( uint32 addrbsb,  uint8 data);
+void IINCHIP_WRITE(uint32 addrbsb,  uint8 data);
 uint8 IINCHIP_READ(uint32 addrbsb);
-uint16 wiz_write_buf(uint32 addrbsb,uint8* buf,uint16 len);
-uint16 wiz_read_buf(uint32 addrbsb, uint8* buf,uint16 len);
+uint16 wiz_write_buf(uint32 addrbsb, uint8 *buf, uint16 len);
+uint16 wiz_read_buf(uint32 addrbsb, uint8 *buf, uint16 len);
 
 
 void iinchip_init(void); // reset iinchip
-void sysinit(uint8 * tx_size, uint8 * rx_size); // setting tx/rx buf size
+void sysinit(uint8 *tx_size, uint8 *rx_size);   // setting tx/rx buf size
 uint8 getISR(uint8 s);
 void putISR(uint8 s, uint8 val);
 uint16 getIINCHIP_RxMAX(uint8 s);
@@ -355,7 +355,7 @@ void setMR(uint8 val);
 void setRTR(uint16 timeout); // set retry duration for data transmission, connection, closing ...
 void setRCR(uint8 retry); // set retry count (above the value, assert timeout interrupt)
 void clearIR(uint8 mask); // clear interrupt
-uint8 getIR( void );
+uint8 getIR(void);
 void setSn_MSS(SOCKET s, uint16 Sn_MSSR); // set maximum segment size
 uint8 getSn_IR(SOCKET s); // get socket interrupt status
 uint8 getSn_SR(SOCKET s); // get socket status
@@ -366,18 +366,18 @@ void setSn_TTL(SOCKET s, uint8 ttl);
 void send_data_processing(SOCKET s, uint8 *wizdata, uint16 len);
 void recv_data_processing(SOCKET s, uint8 *wizdata, uint16 len);
 
-void setGAR(uint8 * addr); // set gateway address
-void setSUBR(uint8 * addr); // set subnet mask address
-void setSHAR(uint8 * addr); // set local MAC address
-void setSIPR(uint8 * addr); // set local IP address
-void getGAR(uint8 * addr);
-void getSUBR(uint8 * addr);
-void getSHAR(uint8 * addr);
-void getSIPR(uint8 * addr);
+void setGAR(uint8 *addr);  // set gateway address
+void setSUBR(uint8 *addr);  // set subnet mask address
+void setSHAR(uint8 *addr);  // set local MAC address
+void setSIPR(uint8 *addr);  // set local IP address
+void getGAR(uint8 *addr);
+void getSUBR(uint8 *addr);
+void getSHAR(uint8 *addr);
+void getSIPR(uint8 *addr);
 
-void setDPORT( SOCKET n,uint16  port);
-void setDHAR(SOCKET n,uint8 * addr);
-void setDIPR(SOCKET n,uint8 * addr);
+void setDPORT(SOCKET n, uint16  port);
+void setDHAR(SOCKET n, uint8 *addr);
+void setDIPR(SOCKET n, uint8 *addr);
 
 void setSn_IR(uint8 s, uint8 val);
 /**
@@ -385,9 +385,9 @@ void setSn_IR(uint8 s, uint8 val);
  * case1.
  *  IINCHIP_WRITE(RTR0,val);
  *  IINCHIP_WRITE(RTR1,val);
- * case1. 
+ * case1.
  *  IINCHIP_WRITE(RTR0,val);
- *  IINCHIP_WRITE(WIZCHIP_OFFSET_INC(RTR0,1)); 
+ *  IINCHIP_WRITE(WIZCHIP_OFFSET_INC(RTR0,1));
  */
 //#define WIZCHIP_OFFSET_INC(ADDR, N)    (ADDR + (N<<8)) //< Increase offset address
 
