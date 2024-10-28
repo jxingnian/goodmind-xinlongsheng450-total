@@ -33,12 +33,18 @@ extern "C" {
 /*******************************************************************************
  ************************ exported macros and struct types *********************
  ******************************************************************************/
+typedef struct {
+    uint8_t uc_data_len;
+    uint8_t uca_data[64];
+} uart_send_data_t;
 
 /*******************************************************************************
  ******************************* exported functions ****************************
  ******************************************************************************/
 extern void uart_spec_init(void);
 extern void uart_apec_send_data(int opcode, const uint8_t *payload_data, uint8_t payload_len);
+int32_t push_uart_send_data(int uart_id, uart_send_data_t *data);
+int tmr_uart_send_rb_timeout(int timer_id, void *data);
 
 /*******************************************************************************
  ***************************  exported global variables ************************

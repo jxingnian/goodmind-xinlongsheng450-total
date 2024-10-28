@@ -39,17 +39,11 @@
 
 #define UART_SEND_RB_SIZE  3
 
-typedef struct {
-    uint8_t uc_data_len;
-    uint8_t uca_data[40];
-} uart_send_data_t;
 /*******************************************************************************
  * private function prototypes
  ******************************************************************************/
-static void tmr_uart_send_rb_timeout(int timer_id, void *data);
 static int32_t pop_uart_send_data(int uart_id, uart_send_data_t *data);
 static int32_t rb_uart_send_unread_pos_count(int uart_id);
-static int32_t push_uart_send_data(int uart_id, uart_send_data_t *data);
 
 /*******************************************************************************
  * external variables and functions
@@ -65,7 +59,7 @@ static int32_t push_uart_send_data(int uart_id, uart_send_data_t *data);
 ring_buffer_t *rb_uart2_send = NULL;
 ring_buffer_t *rb_uart4_send = NULL;
 
-static tmr_t tmr_uart_send_rb;
+// static tmr_t tmr_uart_send_rb;
 /*******************************************************************************
  *******************************************************************************
  * private application code, functions definitions
@@ -97,23 +91,27 @@ void uart_spec_init(void)
     rb_init(&rb_uart2_send, sizeof(uart_send_data_t) * UART_SEND_RB_SIZE);
     rb_init(&rb_uart4_send, sizeof(uart_send_data_t) * UART_SEND_RB_SIZE);
     // 启动发送队列定时器
-    start_rpt_tmr(&tmr_uart_send_rb, tmr_uart_send_rb_timeout, MS_TO_TICKS(10));
+    // start_rpt_tmr(&tmr_uart_send_rb, tmr_uart_send_rb_timeout, MS_TO_TICKS(10));
 }
 
 /*循环定时器*/
-static void tmr_uart_send_rb_timeout(int timer_id, void *data)
+int tmr_uart_send_rb_timeout(int timer_id, void *data)
 {
+    int ret = 0;
     uart_send_data_t send_data;
     if (rb_uart_send_unread_pos_count(LEFT_CTRL_UART) > 0 && bsp_uart_get_uart_idle(1)) {
         if (pop_uart_send_data(LEFT_CTRL_UART, &send_data)) {
             bsp_uart2_dma_send(send_data.uca_data, send_data.uc_data_len);
+            ret = 1;
         }
     }
     if (rb_uart_send_unread_pos_count(RIGHT_CTRL_UART) > 0 && bsp_uart_get_uart_idle(2)) {
         if (pop_uart_send_data(RIGHT_CTRL_UART, &send_data)) {
             bsp_uart4_dma_send(send_data.uca_data, send_data.uc_data_len);
+            ret = 1;
         }
     }
+    return ret;
 }
 
 int32_t push_uart_send_data(int uart_id, uart_send_data_t *data)

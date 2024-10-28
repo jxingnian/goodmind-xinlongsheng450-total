@@ -1,13 +1,3 @@
-/**
- * @file bsp_uart.c
- * @author zhaochunyun (CY.Zhao2020@outlook.com)
- * @brief
- * @version 0.2
- * @date 2024-04-20
- * @note 在用dma发送的时候，一定要判断上一帧数据是否发完
- * @copyright (c) 2024 Goodmind.
- *
- */
 #include "main.h"
 #include "bsp_uart.h"
 #include <stdio.h>
@@ -118,7 +108,7 @@ int  bsp_uart_get_uart_idle(uint8_t uart_id)
 int fputc(int ch, FILE *f)
 {
     /* 发送一个字节数据到串口DEBUG_USART */
-    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 1000);
+//    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 1000);
 
     return (ch);
 }
@@ -127,7 +117,8 @@ int fputc(int ch, FILE *f)
 int fgetc(FILE *f)
 {
 
-    int ch;
-    HAL_UART_Receive(&huart1, (uint8_t *)&ch, 1, 1000);
-    return (ch);
+//    int ch;
+//    HAL_UART_Receive(&huart1, (uint8_t *)&ch, 1, 1000);
+//    return (ch);
+  return 0;
 }

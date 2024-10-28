@@ -25,15 +25,21 @@
 #ifndef __UART_PARSE__
 #define __UART_PARSE__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*******************************************************************************
  ********************************* include files *******************************
  ******************************************************************************/
 #include <stdio.h>
 #include <stdint.h>
+#include "main.h"
+#include "config.h"
+#include "et_os.h"
+#include "usart.h"
+#include <string.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*******************************************************************************
  ************************ exported macros and struct types *********************
@@ -49,34 +55,37 @@ extern "C" {
 #define OPCODE_SIZE     1
 #define CRC_SIZE        1
 
-#define MIN_PACKET_SIZE (HEAD_SIZE + OPCODE_SIZE + ADDR_SIZE + LENGTH_SIZE + CRC_SIZE + TAIL_SIZE)
+#define MIN_PACKET_SIZE (HEAD_SIZE + OPCODE_SIZE + ADDR_SIZE + LENGTH_SIZE + \
+                         CRC_SIZE + TAIL_SIZE)
 
 #define MAX_PACKET_SIZE 80
 #define MSG_MAX_PAYLOAD 64
 
-typedef struct {
-    unsigned recv_len;
-    uint8_t recv_buf[MAX_PACKET_SIZE];
-} uart_context_t;
-
-typedef int (*cmd_process_t)(uint16_t opcode, const uint8_t *data, uint32_t len);
+typedef int (*cmd_process_t)(uint8_t device_addr, uint16_t opcode, const uint8_t *data, uint32_t len);
 
 typedef struct {
     uint16_t opcode;
     cmd_process_t cmd_process;
 } method_cmd_table_t;
 
+void uart_motor_chair_recv_data(const uint8_t *buf, int len);
 /*******************************************************************************
  ******************************* exported functions ****************************
  ******************************************************************************/
-void method_cmd_init(const method_cmd_table_t *pcmd_table, uint32_t table_len);
+void method_cmd_init(UART_HandleTypeDef *uart,
+                     const method_cmd_table_t *pcmd_table, uint32_t table_len);
 
-void uart1_recv_data(const uint8_t *buf, int len);
+//void uart_motor_right_recv_data(const uint8_t *buf, int len);
+//void uart_motor_left_recv_data(const uint8_t *buf, int len);
+//void uart_key_left_recv_data(const uint8_t *buf, int len);
+//void uart_key_right_recv_data(const uint8_t *buf, int len);
 void uart2_recv_data(const uint8_t *buf, int len);
 void uart4_recv_data(const uint8_t *buf, int len);
-uint8_t do_spec_data_package(uint8_t *dst_buf, int opcode, const uint8_t *payload_data, uint8_t payload_data_len);
 
-void hex_print(void *in, int len);
+uint8_t do_spec_data_package(uint8_t *dst_buf, uint8_t addr, int opcode,
+                             const uint8_t *payload_data, uint8_t payload_data_len);
+
+//void hex_print(void *in, int len);
 
 /*******************************************************************************
  ***************************  exported global variables ************************

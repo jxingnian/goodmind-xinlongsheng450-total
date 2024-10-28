@@ -1,15 +1,25 @@
+/*
+ * @Author: XingNian j_xingnian@163.com
+ * @Date: 2024-09-11 14:26:09
+ * @LastEditors: XingNian j_xingnian@163.com
+ * @LastEditTime: 2024-09-26 01:16:02
+ * @FilePath: \MDK-ARMc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\app_pis_proc.c
+ * @Description:
+ *
+ * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
+ */
 #include "app_pis_proc.h"
-#include <string.h>
-#include "app.h"
+#include "logic_proc.h"
 /* 定义帧头和帧尾 */
 #define FRAME_HEADER_1 0xC5  /* 第一个帧头字节 */
 #define FRAME_HEADER_2 0xCC  /* 第二个帧头字节 */
 #define FRAME_TAIL 0xCE      /* 帧尾字节 */
 
+
 /* 定义消息类型枚举 */
 typedef enum {
     REQ_RESET_CALL = 0x01,                /* 重置呼叫请求 */
-    REQ_SEAT_ALIGN_TO_DIRECTION,          /* 座椅对齐方向请求 */
+    REQ_SEAT_ALIGN_TO_DIRECTION,          /* 调整全部座椅到指定车辆运行方向 */
     REQ_SEAT_INTO_MEETING_MODE,           /* 进入会议模式请求 */
     REQ_SEAT_GUEST_MODE_ADJUSTMENT,       /* 会客模式调整请求 */
     REQ_SEAT_ROTATION_ESTOP,              /* 座椅旋转急停请求 */
@@ -51,15 +61,16 @@ static void handle_reset_call(uint8_t *payload, uint8_t len)
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 8; j++) {
             int seat_num = i * 8 + j + 1;
-            if (seat_num <= 20) {
+            if (seat_num <= SEAT_COUNT) {
                 printf("座椅%d: %s\n", seat_num, (payload[i] & (1 << j)) ? "保持" : "复位");
+                if ((payload[i] & (1 << j)) == 0)
+                    send_reset_call(seat_ctrl_info[seat_num]);
             }
         }
     }
-    // TODO: 实际执行重置或保持呼叫的操作
 }
 
-/* 处理座椅对齐方向请求 */
+/* 调整全部座椅到指定车辆运行方向 */
 static void handle_seat_align_to_direction(uint8_t *payload, uint8_t len)
 {
     if (len != 1) {
@@ -69,14 +80,15 @@ static void handle_seat_align_to_direction(uint8_t *payload, uint8_t len)
     switch (payload[0]) {
     case 1:
         printf("调整全部座椅到1位端(司机侧)\n");
+        send_seat_align_to_direction(1);
         break;
     case 2:
         printf("调整全部座椅到2位端(司机侧)\n");
+        send_seat_align_to_direction(2);
         break;
     default:
         printf("未知的座椅方向: %d\n", payload[0]);
     }
-    // TODO: 实际执行座椅调整操作
 }
 
 /* 处理进入会议模式请求 */
@@ -87,7 +99,7 @@ static void handle_seat_into_meeting_mode(uint8_t *payload, uint8_t len)
         return;
     }
     printf("调整座椅进入会议模式\n");
-    // TODO: 实际执行进入会议模式的操作
+    send_seat_into_meeting_mode();
 }
 
 /* 处理会客模式调整请求 */
@@ -97,19 +109,7 @@ static void handle_seat_guest_mode_adjustment(uint8_t *payload, uint8_t len)
         printf("会客模式调整数据长度错误\n");
         return;
     }
-    switch (payload[0]) {
-    case 0x00: printf("1a/2a 会客\n"); break;
-    case 0x01: printf("2a/3a 会客\n"); break;
-    case 0x10: printf("1f/2f 会客\n"); break;
-    case 0x11: printf("2f/3f 会客\n"); break;
-    case 0x20: printf("1a/1f 会客\n"); break;
-    case 0x21: printf("2a/2f 会客\n"); break;
-    case 0x22: printf("3a/3f 会客\n"); break;
-    case 0x30: printf("1a/2a/1f/2f 会客\n"); break;
-    case 0x31: printf("2a/3a/2f/3f 会客\n"); break;
-    default: printf("未知的会客模式: 0x%02X\n", payload[0]);
-    }
-    // TODO: 实际执行会客模式调整操作
+    send_seat_into_guest_mode(payload[0]);
 }
 
 /* 处理座椅旋转急停请求 */
@@ -120,7 +120,7 @@ static void handle_seat_rotation_estop(uint8_t *payload, uint8_t len)
         return;
     }
     printf("执行座椅旋转急停\n");
-    // TODO: 实际执行座椅旋转急停操作
+    send_seat_rotation_estop();
 }
 
 /* 处理单个座椅位置设置请求 */
@@ -131,15 +131,7 @@ static void handle_single_seat_position_set(uint8_t *payload, uint8_t len)
         return;
     }
     printf("设置座椅 %d 到位置: ", payload[0]);
-    switch (payload[1]) {
-    case 0: printf("1位端会客朝向\n"); break;
-    case 1: printf("2位端会客朝向\n"); break;
-    case 2: printf("过道会客朝向\n"); break;
-    case 3: printf("1位端正常朝向\n"); break;
-    case 4: printf("2位端正常朝向\n"); break;
-    default: printf("未知位置: %d\n", payload[1]);
-    }
-    // TODO: 实际执行单个座椅位置设置操作
+    send_seat_position_set(payload[0], payload[1]);
 }
 
 /* 处理PIS数据的主函数 */
@@ -182,22 +174,22 @@ void process_pis_data(uint8_t *data, uint16_t len)
 
     /* 根据功能码调用相应的处理函数 */
     switch (msg.fun) {
-    case REQ_RESET_CALL:
+    case REQ_RESET_CALL://请求复位呼叫
         handle_reset_call(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_ALIGN_TO_DIRECTION:
+    case REQ_SEAT_ALIGN_TO_DIRECTION://调整全部座椅到指定车辆运行方向
         handle_seat_align_to_direction(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_INTO_MEETING_MODE:
+    case REQ_SEAT_INTO_MEETING_MODE://请求进入会议模式
         handle_seat_into_meeting_mode(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_GUEST_MODE_ADJUSTMENT:
+    case REQ_SEAT_GUEST_MODE_ADJUSTMENT://请求会客模式调整
         handle_seat_guest_mode_adjustment(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_ROTATION_ESTOP:
+    case REQ_SEAT_ROTATION_ESTOP://请求座椅旋转急停
         handle_seat_rotation_estop(msg.payload, msg.payload_len);
         break;
-    case REQ_SINGLE_SEAT_POSITION_SET:
+    case REQ_SINGLE_SEAT_POSITION_SET://请求单个座椅位置设置
         handle_single_seat_position_set(msg.payload, msg.payload_len);
         break;
     default:
