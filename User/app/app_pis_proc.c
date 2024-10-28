@@ -2,8 +2,8 @@
  * @Author: XingNian j_xingnian@163.com
  * @Date: 2024-09-11 14:26:09
  * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-09-26 01:16:02
- * @FilePath: \MDK-ARMc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\app_pis_proc.c
+ * @LastEditTime: 2024-10-28 15:59:52
+ * @FilePath: \total_controller\User\app\app_pis_proc.c
  * @Description:
  *
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
@@ -24,6 +24,7 @@ typedef enum {
     REQ_SEAT_GUEST_MODE_ADJUSTMENT,       /* 会客模式调整请求 */
     REQ_SEAT_ROTATION_ESTOP,              /* 座椅旋转急停请求 */
     REQ_SINGLE_SEAT_POSITION_SET,         /* 单个座椅位置设置请求 */
+    REQ_AMBIENT_LIGHT_SETTING,            /* 氛围灯设置请求 */
 } e_msg_type;
 
 /* 定义报文结构 */
@@ -134,6 +135,17 @@ static void handle_single_seat_position_set(uint8_t *payload, uint8_t len)
     send_seat_position_set(payload[0], payload[1]);
 }
 
+/* 处理氛围灯设置请求 */
+static void handle_ambient_light_setting(uint8_t *payload, uint8_t len)
+{
+    if (len != 2) {
+        printf("氛围灯设置数据长度错误\n");
+        return;
+    }
+    printf("设置氛围灯\n");
+    send_ambient_light_setting(payload[0], payload[1]);
+}
+
 /* 处理PIS数据的主函数 */
 void process_pis_data(uint8_t *data, uint16_t len)
 {
@@ -191,6 +203,9 @@ void process_pis_data(uint8_t *data, uint16_t len)
         break;
     case REQ_SINGLE_SEAT_POSITION_SET://请求单个座椅位置设置
         handle_single_seat_position_set(msg.payload, msg.payload_len);
+        break;
+    case REQ_AMBIENT_LIGHT_SETTING://请求氛围灯设置
+        handle_ambient_light_setting(msg.payload, msg.payload_len);
         break;
     default:
         printf("未知的功能码: 0x%02X\n", msg.fun);

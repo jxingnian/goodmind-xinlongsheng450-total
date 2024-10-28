@@ -2,8 +2,8 @@
  * @Author: XingNian j_xingnian@163.com
  * @Date: 2024-09-11 18:19:19
  * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-09-26 01:55:18
- * @FilePath: \MDK-ARMc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\logic_proc.c
+ * @LastEditTime: 2024-10-28 16:05:23
+ * @FilePath: \total_controller\User\app\logic_proc.c
  * @Description:
  *
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
@@ -283,6 +283,8 @@ void send_seat_position_set(uint8_t seat_num, uint8_t position)
     case 4: printf("2位端正常朝向\n");
         data_buf[0] = 0x02;
         break;
+    default: printf("未知的座椅位置: %d\n", position);
+        return;
     }
     data_buf[1] = 0x00;
     data_buf[2] = 0x00;
@@ -299,6 +301,34 @@ void send_seat_position_set(uint8_t seat_num, uint8_t position)
     }
 
 }
+
+/* 处理氛围灯设置请求 */
+void send_ambient_light_setting(uint8_t seat_num, uint8_t light_status)
+{
+    uint8_t data_buf[12];
+    uint8_t data_len = 0;
+    uint8_t addr;
+    uint8_t opcode;
+
+    /* code */
+    addr = seat_num;
+    opcode = OPCODE_WRITE_REG;
+    data_buf[0] = 0x0A;
+    data_buf[1] = light_status;
+    data_buf[2] = 0x00;
+    data_buf[3] = 0x00;
+    data_buf[4] = 0x00;
+    data_len = 5;
+    if (data_len > 0 && data_len < 40) {
+        uart_send_data_t send_data;
+        uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
+        send_data.uc_data_len = len;
+
+        push_uart_send_data(LEFT_CTRL_UART, &send_data);
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+    }
+}
+
 static int method_total_ctrl_read_reg_resp(uint8_t device_addr, uint16_t opcode,
                                            const uint8_t *data, uint32_t len)
 {
