@@ -19,7 +19,7 @@
 
 #define SEAT_COUNT 6
 void process_pis_data(uint8_t *data, uint16_t len);
-void send_data_to_pis(uint8_t *payload, uint16_t payload_len);
+void send_data_to_pis(uint8_t function, uint8_t *payload, uint16_t payload_len);
 
 
 #endif

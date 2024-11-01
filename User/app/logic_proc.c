@@ -37,6 +37,37 @@ typedef struct {
 } chair_status_t;
 chair_status_t chair_status[SEAT_COUNT];
 
+typedef union {
+    struct {
+        uint8_t seat5 : 3;  // 座椅3状态，占3位
+        uint8_t seat6 : 3;  // 座椅4状态，占3位
+        uint8_t reserved1 : 2;
+        uint8_t seat3 : 3;  // 座椅5状态，占3位
+        uint8_t seat4 : 3;  // 座椅6状态，占3位
+        uint8_t reserved2 : 2;
+        uint8_t seat1 : 3;  // 座椅7状态，占3位
+        uint8_t seat2 : 3;  // 座椅8状态，占3位
+        uint8_t reserved3 : 2;
+    } seats;
+
+    uint8_t buff[3]; // 直接访问整个 3 字节数据
+} SeatStatusReport;
+
+// 设置座椅状态的辅助函数
+void set_seat_status(SeatStatusReport *report, int seat_index, uint8_t status) {
+    if (status > 7) return; // 状态超过3位范围（0-7），直接返回
+    switch (seat_index) {
+        case 0: report->seats.seat1 = status; break;
+        case 1: report->seats.seat2 = status; break;
+        case 2: report->seats.seat3 = status; break;
+        case 3: report->seats.seat4 = status; break;
+        case 4: report->seats.seat5 = status; break;
+        case 5: report->seats.seat6 = status; break;
+    }
+}
+
+SeatStatusReport seat_position_report;
+uint8_t call_status_report[3] = {0};
 static void logic_task(int timer_id, void *data)
 {
     uint8_t send_buf[64];
@@ -78,20 +109,30 @@ static void logic_task(int timer_id, void *data)
     static uint8_t fast_timer = 0;
     if (fast_timer >= 20) { // 1s
         fast_timer = 0;
-        uint8_t call_status_report[3] = {0};
-        uint8_t seat_position_report[3] = {0};
+        
+      
+        
+//        uint8_t seat_position_report[3] = {0};
         uint8_t seat_error_report[3] = {0};
 
         for (int i = 0; i < SEAT_COUNT; i++) {
             if (chair_status[i].call_status) {
-                call_status_report[i / 8] |= (1 << (i % 8));
+                call_status_report[2 - i / 8] |= (1 << (i % 8));
+            } else {
+                call_status_report[2 - i / 8] &= ~(1 << (i % 8));
             }
-            seat_position_report[i / 8] |= (chair_status[i].current_position & 0x07) << ((i % 8) * 3);
-            seat_error_report[i / 8] |= (chair_status[i].error_status & 0x01) << i;
+            set_seat_status(&seat_position_report, i, chair_status[i].current_position);
+//            seat_position_report[i / 8] |= (chair_status[i].current_position & 0x07) << ((i % 8) * 3);
+            
+            if (chair_status[i].error_status==1)
+                seat_error_report[2 - i / 8] |= (1 << (i % 8));
+            else {
+                seat_error_report[2 - i / 8] &= ~(1 << (i % 8));
+            }
         }
-        send_data_to_pis(call_status_report, sizeof(call_status_report));
-        send_data_to_pis(seat_position_report, sizeof(seat_position_report));
-        send_data_to_pis(seat_error_report, sizeof(seat_error_report));
+        send_data_to_pis(0x01, call_status_report, sizeof(call_status_report));
+        send_data_to_pis(0x02, seat_position_report.buff, 3);
+        send_data_to_pis(0x03, seat_error_report, sizeof(seat_error_report));
     }
     fast_timer++;
     count++;

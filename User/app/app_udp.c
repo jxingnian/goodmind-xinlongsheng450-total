@@ -25,12 +25,13 @@ extern uint8 rxsize[];          /* 引用外部变量，声明Socket接收缓存大小 */
 uint8 buffer[2048];             /* 定义一个2KB的数组，用来存放Socket的通信数据 */
 uint8 remote_ip[4];             /* 配置远程IP地址 */
 uint16 remote_port;             /* 配置远程端口 */
-uint16 local_port = 8002;       /* 初始化一个本地端口 */
+uint16 local_port = 8003;       /* 初始化一个本地端口 */
 uint16 len = 0;
 uint8 DIP[4] = {225, 0, 0, 55};
-uint8 DHAR[6] = {0x01, 0x00, 0x5e, 0x01, 0x01, 0x01};
-uint16 DPORT = 8003;
-uint16 MPORT = 8002;  // 组播发送用的端口号
+
+uint8 DHAR[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x37};
+uint16 DPORT = 8002;
+//uint16 MPORT = 8002;  // 组播发送用的端口号
 
 
 /* UDP处理循环函数 */
@@ -52,7 +53,9 @@ static void tmr_udp_process_loop(int timer_id, void *data)
         setDIPR(0, DIP);
         setDHAR(0, DHAR);
         setDPORT(0, DPORT);
-        socket(0, 0x82, local_port, 0);                   /*初始化socket 0的套接字*/
+				uint8_t mode = 0x82;
+				mode |= (1 << 5); 
+				IINCHIP_WRITE(Sn_MR(0), mode);
         break;
     }
 }
@@ -63,13 +66,15 @@ static void start_udp_timer(void)
     start_rpt_tmr(&tmr_udp_process, tmr_udp_process_loop, MS_TO_TICKS(100));
 }
 
+// 发送 8002
+// 接收 8003
 /* UDP初始化函数 */
 void app_udp_init(void)
 {
     Reset_W5500();
     // 启动UDP定时器
     /***** W5500的IP信息初始化 *****/
-    set_default();                                                      // 设置默认MAC、IP、GW、SUB、DNS
+    set_default();                       // 设置默认MAC、IP、GW、SUB、DNS
     set_network();
     printf("UDP Local Port: %d \r\n", local_port);
     printf("UDP Remote IP: %d.%d.%d.%d \r\n", DIP[0], DIP[1], DIP[2], DIP[3]);
@@ -79,7 +84,14 @@ void app_udp_init(void)
     setDIPR(0, DIP);
     setDHAR(0, DHAR);
     setDPORT(0, DPORT);
-    socket(0, 0x82, local_port, 0);                   /*初始化socket 0的套接字*/
+    
+//    uint8_t mode = IINCHIP_READ(Sn_MR(0));
+    uint8_t mode = 0x82;
+    mode |= (1 << 5); 
+    IINCHIP_WRITE(Sn_MR(0), mode);
+
+    socket(0, mode, local_port, 0);                   /*初始化socket 0的套接字*/
+    
     start_udp_timer();
 }
 
@@ -97,7 +109,7 @@ void app_udp_send_data(uint8_t *data, uint16_t len)
     }
 
     // 发送数据
-    int32_t result = sendto(0, data, len, DIP, DPORT);
+    int32_t result = sendto(0, data, len, DIP, 8002);
 
     if (result == len) {
         printf("成功向PIS发送%d字节数据\r\n", len);
@@ -105,10 +117,3 @@ void app_udp_send_data(uint8_t *data, uint16_t len)
         printf("向PIS发送数据失败，错误代码：%d\r\n", result);
     }
 }
-
-
-
-
-
-
-

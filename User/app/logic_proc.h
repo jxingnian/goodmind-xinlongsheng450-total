@@ -21,5 +21,6 @@ void send_seat_rotation_estop(void);
 void send_seat_into_guest_mode(uint8_t mode);
 void send_seat_into_meeting_mode(void);
 void send_seat_align_to_direction(uint8_t direction);
-
+/* 处理氛围灯设置请求 */
+void send_ambient_light_setting(uint8_t seat_num, uint8_t light_status);
 #endif

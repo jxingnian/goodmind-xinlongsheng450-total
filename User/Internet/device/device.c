@@ -90,11 +90,12 @@ void set_network(void)
 void set_default(void)
 {
     // 定义默认的网络参数
-    uint8 mac[6] = {0x00, 0x08, 0xdc, 0x11, 0x11, 0x11}; // 默认MAC地址
-    uint8 lip[4] = {192, 168, 81, 52}; // 默认本地IP地址
-    uint8 sub[4] = {255, 255, 255, 0}; // 默认子网掩码
-    uint8 gw[4]  = {192, 168, 1, 1}; // 默认网关
-    uint8 dns[4] = {8, 8, 8, 8};     // 默认DNS服务器（Google Public DNS）
+    uint8 mac[6] = {0x00, 0x08, 0xdc, 0x11, 0x11, 0x11};
+    uint8 lip[4] = {192, 168, 81, 52}; // 修改为新的本地IP地址
+    uint8 sub[4] = {255, 255, 0, 0}; // 修改子网掩码
+    uint8 gw[4]  = {192, 168, 1, 1};   // 保持默认网关
+    uint8 dns[4] = {8, 8, 8, 8};       // 修改为备用DNS服务器（Google Public DNS备用）
+
 
     // 将默认参数复制到配置结构体中
     memcpy(ConfigMsg.lip, lip, 4);

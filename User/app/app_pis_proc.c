@@ -24,6 +24,7 @@ typedef enum {
     REQ_SEAT_GUEST_MODE_ADJUSTMENT,       /* 会客模式调整请求 */
     REQ_SEAT_ROTATION_ESTOP,              /* 座椅旋转急停请求 */
     REQ_SINGLE_SEAT_POSITION_SET,         /* 单个座椅位置设置请求 */
+    REQ_RESET_ANOMALOUS,
     REQ_AMBIENT_LIGHT_SETTING,            /* 氛围灯设置请求 */
 } e_msg_type;
 
@@ -138,6 +139,7 @@ static void handle_single_seat_position_set(uint8_t *payload, uint8_t len)
 /* 处理氛围灯设置请求 */
 static void handle_ambient_light_setting(uint8_t *payload, uint8_t len)
 {
+    // TODO 协议有效数据长度，只有一个字节
     if (len != 2) {
         printf("氛围灯设置数据长度错误\n");
         return;
@@ -213,7 +215,7 @@ void process_pis_data(uint8_t *data, uint16_t len)
     }
 }
 
-void send_data_to_pis(uint8_t *payload, uint16_t payload_len)
+void send_data_to_pis(uint8_t function, uint8_t *payload, uint16_t payload_len)
 {
     uint8_t data[256]; // 假设最大数据长度为256字节
     uint16_t len = 0;
@@ -239,10 +241,10 @@ void send_data_to_pis(uint8_t *payload, uint16_t payload_len)
     data[len++] = 0x37;
 
     // 标识S2
-    data[len++] = 0x01;
+    data[len++] = 0x00;
 
     // 功能码（假设为0x81，表示响应）
-    data[len++] = 0x81;
+    data[len++] = function; // TODO 更改
 
     // 添加payload长度
     data[len++] = payload_len;
@@ -253,7 +255,7 @@ void send_data_to_pis(uint8_t *payload, uint16_t payload_len)
 
     // 计算并添加异或校验
     uint8_t xor_check = 0;
-    for (int i = 2; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         xor_check ^= data[i];
     }
     data[len++] = xor_check;
