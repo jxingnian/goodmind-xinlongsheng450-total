@@ -60,16 +60,17 @@ static void handle_reset_call(uint8_t *payload, uint8_t len)
         return;
     }
     printf("处理清除呼叫：\n");
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 8; j++) {
-            int seat_num = i * 8 + j + 1;
-            if (seat_num <= SEAT_COUNT) {
-                printf("座椅%d: %s\n", seat_num, (payload[i] & (1 << j)) ? "保持" : "复位");
-                if ((payload[i] & (1 << j)) == 0)
-                    send_reset_call(seat_ctrl_info[seat_num]);
-            }
-        }
-    }
+    send_reset_call(0x99);
+//    for (int i = 0; i < 3; i++) {
+//        for (int j = 0; j < 8; j++) {
+//            int seat_num = (2-i) * 8 + j + 1;
+//            if (seat_num <= SEAT_COUNT) {
+//                printf("座椅%d: %s\n", seat_num, (payload[i] & (1 << j)) ? "保持" : "复位");
+//                if ((payload[2-i] & (1 << j)) == 0)
+//                    send_reset_call(seat_num);
+//            }
+//        }
+//    }
 }
 
 /* 调整全部座椅到指定车辆运行方向 */
@@ -140,12 +141,12 @@ static void handle_single_seat_position_set(uint8_t *payload, uint8_t len)
 static void handle_ambient_light_setting(uint8_t *payload, uint8_t len)
 {
     // TODO 协议有效数据长度，只有一个字节
-    if (len != 2) {
-        printf("氛围灯设置数据长度错误\n");
-        return;
-    }
-    printf("设置氛围灯\n");
-    send_ambient_light_setting(payload[0], payload[1]);
+//    if (len != 2) {
+//        printf("氛围灯设置数据长度错误\n");
+//        return;
+//    }
+//    printf("设置氛围灯\n");
+    send_ambient_light_setting(0x99, payload[0]);
 }
 
 /* 处理PIS数据的主函数 */
@@ -180,11 +181,11 @@ void process_pis_data(uint8_t *data, uint16_t len)
     printf("Check value: 0x%02X\n", msg.check_xor);
 
     /* 验证异或校验 */
-    uint8_t calculated_xor = calculate_xor(data, len - 2);
-    if (calculated_xor != msg.check_xor) {
-        printf("XOR check error, calculated value: 0x%02X, received value: 0x%02X\n", calculated_xor, msg.check_xor);
-        return;
-    }
+//    uint8_t calculated_xor = calculate_xor(data, len - 2);
+//    if (calculated_xor != msg.check_xor) {
+//        printf("XOR check error, calculated value: 0x%02X, received value: 0x%02X\n", calculated_xor, msg.check_xor);
+//        return;
+//    }
 
     /* 根据功能码调用相应的处理函数 */
     switch (msg.fun) {

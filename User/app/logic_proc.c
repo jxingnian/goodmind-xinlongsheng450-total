@@ -157,7 +157,7 @@ uint8_t xor_crc(uint8_t *puchMsg, uint16_t usDataLen)
 }
 
 /* 清除呼叫 */
-void send_reset_call(seat_t seat_status)
+void send_reset_call(uint8_t seat_index)
 {
     uint8_t data_buf[12];
     uint8_t data_len = 0;
@@ -165,7 +165,7 @@ void send_reset_call(seat_t seat_status)
     uint8_t opcode;
 
     /* code */
-    addr = seat_status.seat_num;
+    addr = seat_index;
     opcode = OPCODE_WRITE_REG;
     data_buf[0] = 0x06;
     data_buf[1] = 0x00;
@@ -370,11 +370,40 @@ void send_ambient_light_setting(uint8_t seat_num, uint8_t light_status)
     }
 }
 
+/* 电机状态 */
+typedef enum {
+    MOTOR_AISLE = 14,           /* (11) 电机运动面向过道 */
+    MOTOR_FORWARD = 15,         /* (12) 电机运动面向前方 */
+    MOTOR_REAR = 16,            /* (13) 电机运动面向后方 */
+    MOTOR_YIWEI = 17,           /* (14) 电机运动面向一位端 */
+    MOTOR_ERWEI = 18,           /* (15) 电机运动面向二位端 */
+    MOTOR_NULL = 100,
+} MOTORSTATE;
+
 static int method_total_ctrl_read_reg_resp(uint8_t device_addr, uint16_t opcode,
                                            const uint8_t *data, uint32_t len)
 {
-    chair_status[device_addr - 1].call_status = data[0];
-    chair_status[device_addr - 1].current_position = data[1];
+    chair_status[device_addr - 1].call_status = data[1];
+    switch ((MOTORSTATE)data[3]) {
+    case MOTOR_AISLE:
+        chair_status[device_addr - 1].current_position = 2;
+        break;
+        
+    case MOTOR_FORWARD:
+        chair_status[device_addr - 1].current_position = 0;
+        break;
+    case MOTOR_REAR:
+        chair_status[device_addr - 1].current_position = 1;
+        break;
+    case MOTOR_YIWEI:
+        chair_status[device_addr - 1].current_position = 3;
+        break;
+    case MOTOR_ERWEI:
+        chair_status[device_addr - 1].current_position = 4;
+        break;
+    default:
+        break;
+    }
     chair_status[device_addr - 1].error_status = data[2];
     return 0;
 }

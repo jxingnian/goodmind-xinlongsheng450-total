@@ -15,7 +15,7 @@ typedef struct {
     uint8_t seat_status;  /* ×ùÒÎ×´Ì¬ */
 } seat_t;
 extern seat_t seat_ctrl_info[20];
-void send_reset_call(seat_t seat_status);
+void send_reset_call(uint8_t seat_index);
 void send_seat_position_set(uint8_t seat_num, uint8_t position);
 void send_seat_rotation_estop(void);
 void send_seat_into_guest_mode(uint8_t mode);
