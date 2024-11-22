@@ -1,6 +1,0 @@
---c99 --gnu -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include -I ../User/app -I ../User/bsp/bsp_uart -I ../User/os -I ../User/utils -I ../User/Internet/W5500 -I ../User/Internet/device -I ../User/Internet/socket -I ../User/Internet/spi -I ../User/bsp/bsp_hmi -I ../User/HMI_DRIVE
--I.\RTE\_total_controller
--IC:\Users\Administrator\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include
--IC:\Users\Administrator\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include
--D__UVISION_VERSION="538" -D_RTE_ -DSTM32F10X_HD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xE
--o total_controller\app_udp.o --omf_browse total_controller\app_udp.crf --depend total_controller\app_udp.d "..\User\app\app_udp.c"

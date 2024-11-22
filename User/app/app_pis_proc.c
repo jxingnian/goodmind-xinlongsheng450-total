@@ -43,15 +43,15 @@ typedef struct {
     uint8_t tail;
 } pis_message_t;
 
-/* 计算异或校验 */
-static uint8_t calculate_xor(uint8_t *data, int len)
-{
-    uint8_t result = 0;
-    for (int i = 0; i < len; i++) {
-        result ^= data[i];
-    }
-    return result;
-}
+///* 计算异或校验 */
+//static uint8_t calculate_xor(uint8_t *data, int len)
+//{
+//    uint8_t result = 0;
+//    for (int i = 0; i < len; i++) {
+//        result ^= data[i];
+//    }
+//    return result;
+//}
 /* 处理重置呼叫请求 */
 static void handle_reset_call(uint8_t *payload, uint8_t len)
 {

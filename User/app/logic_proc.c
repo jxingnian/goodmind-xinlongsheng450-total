@@ -2,7 +2,7 @@
  * @Author: XingNian j_xingnian@163.com
  * @Date: 2024-09-11 18:19:19
  * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-10-28 16:05:23
+ * @LastEditTime: 2024-11-22 16:05:49
  * @FilePath: \total_controller\User\app\logic_proc.c
  * @Description:
  *
@@ -70,12 +70,14 @@ SeatStatusReport seat_position_report;
 uint8_t call_status_report[3] = {0};
 static void logic_task(int timer_id, void *data)
 {
-    uint8_t send_buf[64];
+//    uint8_t send_buf[64];
     uint8_t data_buf[12];
     uint8_t data_len = 0;
     uint8_t addr;
     uint8_t opcode;
     static uint8_t addr_count = 0x01;
+    static uint8_t Foot_hole_addr_count = 0x0;
+    static uint8_t Foot_hole_addr = 0x81;
     static int32_t count;
 
     /* 判断发送队列是否有数据发送 */
@@ -84,7 +86,7 @@ static void logic_task(int timer_id, void *data)
         return;
     }
 
-    /* 发送查询数据 */
+    /* 发送查询主控数据 */
     if (count%2==0) { // 100ms发送一次
         addr = addr_count;
         opcode = OPCODE_READ_REG;
@@ -96,13 +98,43 @@ static void logic_task(int timer_id, void *data)
         data_len = 5;
 
         if (data_len > 0 && data_len < 40) {
-            uint8_t len = do_spec_data_package(send_buf, addr, opcode, data_buf, data_len);
-            bsp_uart2_dma_send(send_buf, len);
-            bsp_uart4_dma_send(send_buf, len);
+            uart_send_data_t send_data;
+            uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
+            send_data.uc_data_len = len;
+
+            push_uart_send_data(LEFT_CTRL_UART, &send_data);
         }
 
-        if (addr_count++ > SEAT_COUNT) {
+        if (addr_count++ >= SEAT_COUNT) {
             addr_count = 0x01;
+        }
+    }
+
+    /* 发送查询脚洞数据 */
+    if (count%2==0) { // 100ms发送一次
+        opcode = 0x03;
+        data_buf[0] = 0x05;
+        data_buf[1] = 0x00;
+        data_buf[2] = 0x00;
+        data_buf[3] = 0x00;
+        data_buf[4] = 0xD1 + Foot_hole_addr_count++;
+        data_len = 5;
+
+        if (data_len > 0 && data_len < 40) {
+            uart_send_data_t send_data;
+            uint8_t len = do_spec_data_package(send_data.uca_data, Foot_hole_addr, opcode, data_buf, data_len);
+            send_data.uc_data_len = len;
+            push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        }
+
+        if(Foot_hole_addr_count > 0x03){
+            if(Foot_hole_addr == 0x81){
+                Foot_hole_addr = 0x82;
+                Foot_hole_addr_count = 0;
+            }else{
+                Foot_hole_addr = 0x81;
+                Foot_hole_addr_count = 0;
+            }
         }
     }
 
@@ -180,7 +212,7 @@ void send_reset_call(uint8_t seat_index)
         send_data.uc_data_len = len;
 
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 
 }
@@ -213,7 +245,7 @@ void send_seat_align_to_direction(uint8_t direction)
         send_data.uc_data_len = len;
 
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 /* 进入会议模式 */
@@ -240,7 +272,7 @@ void send_seat_into_meeting_mode(void)
         send_data.uc_data_len = len;
 
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
@@ -267,7 +299,7 @@ void send_seat_into_guest_mode(uint8_t mode)
         send_data.uc_data_len = len;
 
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
@@ -294,7 +326,7 @@ void send_seat_rotation_estop(void)
         send_data.uc_data_len = len;
 
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 /* 处理单个座椅位置设置请求 */
@@ -338,7 +370,7 @@ void send_seat_position_set(uint8_t seat_num, uint8_t position)
         send_data.uc_data_len = len;
 
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 
 }
@@ -366,7 +398,7 @@ void send_ambient_light_setting(uint8_t seat_num, uint8_t light_status)
         send_data.uc_data_len = len;
 
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 

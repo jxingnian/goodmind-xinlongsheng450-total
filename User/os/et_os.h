@@ -64,7 +64,7 @@ typedef struct {
 } et_uart_send_req_t;
 
 #define LEFT_CTRL_UART  2  // ×ó²àÖ÷¿Ø´®¿Ú
-#define RIGHT_CTRL_UART 4  // ÓÒ²àÖ÷¿Ø´®¿Ú
+#define RIGHT_CTRL_UART 4  // ÓÒ²à½Å¶´´®¿Ú
 
 /*
  * msg standard format
