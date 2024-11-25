@@ -235,6 +235,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>send_data</ItemText>
         </Ww>
+        <Ww>
+          <count>16</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>chair_status[0].hole_ctrl_cmd</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
