@@ -2,7 +2,7 @@
  * @Author: XingNian j_xingnian@163.com
  * @Date: 2024-09-11 18:19:19
  * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-11-24 18:02:54
+ * @LastEditTime: 2024-11-28 14:41:04
  * @FilePath: \total_controller\User\app\logic_proc.c
  * @Description: 逻辑处理模块，包含座椅控制和状态管理
  *
@@ -43,7 +43,7 @@ static tmr_t tmr_logic_task;
 // 定义座椅状态结构体
 typedef struct {
     uint8_t call_status;      // 座椅呼叫状态
-    uint8_t current_position; // 当前旋转位置
+    uint16_t current_position; // 当前旋转位置
     uint8_t error_status;     // 异常状态
     uint8_t hole_ctrl_cmd;    // 洞口控制指令：0x00-无指令，0xA1-打开，0xA2-关闭
 } chair_status_t;
@@ -51,37 +51,43 @@ typedef struct {
 // 座椅状态数组
 chair_status_t chair_status[SEAT_COUNT];
 
-// 定义座椅状态报告联合体
-typedef union {
-    struct {
-        uint8_t seat5 : 3;     // 座椅5状态，占3位
-        uint8_t seat6 : 3;     // 座椅6状态，占3位
-        uint8_t reserved1 : 2; // 保留位
-        uint8_t seat3 : 3;     // 座椅3状态，占3位
-        uint8_t seat4 : 3;     // 座椅4状态，占3位
-        uint8_t reserved2 : 2; // 保留位
-        uint8_t seat1 : 3;     // 座椅1状态，占3位
-        uint8_t seat2 : 3;     // 座椅2状态，占3位
-        uint8_t reserved3 : 2; // 保留位
-    } seats;
-    uint8_t buff[3];           // 3字节缓冲区，用于直接访问
-} SeatStatusReport;
-
+// // 定义座椅状态报告联合体
+// typedef union {
+//     struct {
+//         uint8_t seat5 : 3;     // 座椅5状态，占3位
+//         uint8_t seat6 : 3;     // 座椅6状态，占3位
+//         uint8_t reserved1 : 2; // 保留位
+//         uint8_t seat3 : 3;     // 座椅3状态，占3位
+//         uint8_t seat4 : 3;     // 座椅4状态，占3位
+//         uint8_t reserved2 : 2; // 保留位
+//         uint8_t seat1 : 3;     // 座椅1状态，占3位
+//         uint8_t seat2 : 3;     // 座椅2状态，占3位
+//         uint16_t reserved3 : 2; // 保留位
+//     } seats;
+//     uint8_t buff[3];           // 3字节缓冲区，用于直接访问
+// } SeatStatusReport;
+typedef struct {
+    uint16_t seat1;
+    uint16_t seat2;
+    uint16_t seat3;
+    uint16_t seat4;
+    uint16_t seat5;
+    uint16_t seat6;
+}SeatStatusReport;
 /**
- * @brief 设置座椅状态
+ * @brief 设置座椅位置
  * @param report 座椅状态报告指针
  * @param seat_index 座椅索引（0-5）
  * @param status 状态值（0-7）
  */
 void set_seat_status(SeatStatusReport *report, int seat_index, uint8_t status) {
-    if (status > 7) return; // 状态值超出3位范围（0-7），直接返回
     switch (seat_index) {
-        case 0: report->seats.seat1 = status; break;
-        case 1: report->seats.seat2 = status; break;
-        case 2: report->seats.seat3 = status; break;
-        case 3: report->seats.seat4 = status; break;
-        case 4: report->seats.seat5 = status; break;
-        case 5: report->seats.seat6 = status; break;
+        case 0: report->seat1 = (uint16_t)status; break;
+        case 1: report->seat2 = (uint16_t)status; break;
+        case 2: report->seat3 = (uint16_t)status; break;
+        case 3: report->seat4 = (uint16_t)status; break;
+        case 4: report->seat5 = (uint16_t)status; break;
+        case 5: report->seat6 = (uint16_t)status; break;
     }
 }
 
@@ -95,14 +101,16 @@ static void logic_task(int timer_id, void *data)
     uint8_t addr;
     uint8_t opcode=0;
     static uint8_t addr_count = 0x01;
-    static uint8_t Foot_hole_addr_count = 0x0;
-    static uint8_t Foot_hole_addr = 0x81;
+    // static uint8_t Foot_hole_addr_count = 0x0;
+    // static uint8_t Foot_hole_addr = 0x81;
     static int32_t count;
 
+//串口发送数据
     if (tmr_uart_send_rb_timeout(0, NULL)!=0) {
         return;
     }
 
+//100ms发送一次主控查询
     if (count%2==0) { 
         addr = addr_count;
         opcode = OPCODE_READ_REG;
@@ -126,25 +134,26 @@ static void logic_task(int timer_id, void *data)
         }
     }
 
-    if (count%2==0) { 
-        opcode = 0x03;
-        data_buf[0] = 0x03;
-        data_buf[1] = 0x00;
-        data_buf[2] = 0x00;
-        data_buf[3] = 0x00;
-        data_buf[4] = 0xD1 + Foot_hole_addr_count++;
+    // if (count%2==0) { 
+    //     opcode = 0x03;
+    //     data_buf[0] = 0x03;
+    //     data_buf[1] = 0x00;
+    //     data_buf[2] = 0x00;
+    //     data_buf[3] = 0x00;
+    //     data_buf[4] = 0xD1 + Foot_hole_addr_count++;
 
-        if(Foot_hole_addr_count > 0x03){
-            if(Foot_hole_addr == 0x81){
-                Foot_hole_addr = 0x82;
-                Foot_hole_addr_count = 0;
-            }else{
-                Foot_hole_addr = 0x81;
-                Foot_hole_addr_count = 0;
-            }
-        }
-    }
+    //     if(Foot_hole_addr_count > 0x03){
+    //         if(Foot_hole_addr == 0x81){
+    //             Foot_hole_addr = 0x82;
+    //             Foot_hole_addr_count = 0;
+    //         }else{
+    //             Foot_hole_addr = 0x81;
+    //             Foot_hole_addr_count = 0;
+    //         }
+    //     }
+    // }
 
+//一秒上报pis
     static uint8_t fast_timer = 0;
     if (fast_timer >= 20) { // 1s
         fast_timer = 0;
@@ -158,290 +167,27 @@ static void logic_task(int timer_id, void *data)
                 call_status_report[2 - i / 8] &= ~(1 << (i % 8));
             }
             set_seat_status(&seat_position_report, i, chair_status[i].current_position);
-            
             if (chair_status[i].error_status==1)
                 seat_error_report[2 - i / 8] |= (1 << (i % 8));
             else {
                 seat_error_report[2 - i / 8] &= ~(1 << (i % 8));
             }
-						if(chair_status[i].hole_ctrl_cmd == 0xA1){
-								switch (i)
-								{
-									case 0:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA1;
-
-											Foot_hole_addr = 0x81;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA2;
-
-											Foot_hole_addr = 0x81;
-										}
-										break;
-									case 1:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA1;
-
-											Foot_hole_addr = 0x82;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA2;
-
-											Foot_hole_addr = 0x82;
-										}
-										break;
-									case 2:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA2;
-
-											Foot_hole_addr = 0x81;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA3;
-
-											Foot_hole_addr = 0x81;
-										}
-										break;
-									case 3:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA2;
-
-											Foot_hole_addr = 0x82;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA3;
-
-											Foot_hole_addr = 0x82;
-										}
-										break;
-									case 4:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA3;
-
-											Foot_hole_addr = 0x81;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA4;
-
-											Foot_hole_addr = 0x81;
-										}
-										break;
-									case 5:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA3;
-
-											Foot_hole_addr = 0x82;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x01;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xA4;
-
-											Foot_hole_addr = 0x82;
-										}
-										break;
-									default:
-										break;
-									}
-							}else if(chair_status[i].hole_ctrl_cmd == 0xA2){
-								switch (i)
-								{
-									case 0:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC1;
-
-											Foot_hole_addr = 0x81;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC2;
-
-											Foot_hole_addr = 0x81;
-										}
-										break;
-									case 1:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC1;
-
-											Foot_hole_addr = 0x82;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC2;
-
-											Foot_hole_addr = 0x82;
-										}
-										break;
-									case 2:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC2;
-
-											Foot_hole_addr = 0x81;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC3;
-
-											Foot_hole_addr = 0x81;
-										}
-										break;
-									case 3:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC2;
-
-											Foot_hole_addr = 0x82;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC3;
-
-											Foot_hole_addr = 0x82;
-										}
-										break;
-									case 4:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC3;
-
-											Foot_hole_addr = 0x81;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC4;
-
-											Foot_hole_addr = 0x81;
-										}
-										break;
-									case 5:
-										if(chair_status[i].current_position == 3){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC3;
-
-											Foot_hole_addr = 0x82;
-										}else if(chair_status[i].current_position == 4){
-											opcode = 0x03;
-											data_buf[0] = 0x02;
-											data_buf[1] = 0x00;
-											data_buf[2] = 0x00;
-											data_buf[3] = 0x00;
-											data_buf[4] = 0xC4;
-
-											Foot_hole_addr = 0x82;
-										}
-										break;
-									default:
-										break;
-									}
-						}
         }
         send_data_to_pis(0x01, call_status_report, sizeof(call_status_report));
-        send_data_to_pis(0x02, seat_position_report.buff, 3);
+        // send_data_to_pis(0x02, seat_position_report.buff, 12);
+        //发送座椅位置
+
         send_data_to_pis(0x03, seat_error_report, sizeof(seat_error_report));
     }
+
     fast_timer++;
     count++;
-		if(opcode){
-			uart_send_data_t send_data;
-			uint8_t len = do_spec_data_package(send_data.uca_data, Foot_hole_addr, opcode, data_buf, data_len);
-			send_data.uc_data_len = len;
-			push_uart_send_data(RIGHT_CTRL_UART, &send_data);
-		}
+		// if(opcode){
+		// 	uart_send_data_t send_data;
+		// 	uint8_t len = do_spec_data_package(send_data.uca_data, Foot_hole_addr, opcode, data_buf, data_len);
+		// 	send_data.uc_data_len = len;
+		// 	push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+		// }
 }
 // 逻辑处理初始化函数
 void logic_proc_init(void)
@@ -511,8 +257,12 @@ void send_seat_align_to_direction(uint8_t direction)
     /* 根据方向设置功能码 */
     if (direction == 1) {
         data_buf[0] = 0x01;        // 1位端方向
-    } else {
+    } else if (direction == 2){
         data_buf[0] = 0x02;        // 2位端方向
+    }else if (direction == 3){
+        data_buf[0] = 0x03;        // 向前
+    }else if (direction == 4){
+        data_buf[0] = 0x04;        // 向后
     }
     
     /* 设置剩余数据缓冲区 */
@@ -736,27 +486,8 @@ static int method_total_ctrl_read_reg_resp(uint8_t device_addr, uint16_t opcode,
     /* 更新呼叫状态 */
     chair_status[device_addr - 1].call_status = data[1];
 
-    /* 根据电机状态更新当前位置 */
-    switch ((MOTORSTATE)data[3]) {
-    case MOTOR_AISLE:
-        chair_status[device_addr - 1].current_position = 2;  /* 过道位置 */
-        break;
-    case MOTOR_FORWARD:
-        chair_status[device_addr - 1].current_position = 0;  /* 前向位置 */
-        break;
-    case MOTOR_REAR:
-        chair_status[device_addr - 1].current_position = 1;  /* 后向位置 */
-        break;
-    case MOTOR_YIWEI:
-        chair_status[device_addr - 1].current_position = 3;  /* 一位端位置 */
-        break;
-    case MOTOR_ERWEI:
-        chair_status[device_addr - 1].current_position = 4;  /* 二位端位置 */
-        break;
-    default:
-        /* 未知位置，不更新 */
-        break;
-    }
+    /* 更新当前座椅位置 */
+    chair_status[device_addr - 1].current_position = data[3];  /* 当前位置 */
 
     /* 更新错误状态和洞控制命令 */
     chair_status[device_addr - 1].error_status = data[2];

@@ -2,7 +2,7 @@
  * @Author: XingNian j_xingnian@163.com
  * @Date: 2024-09-11 14:26:09
  * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-10-28 15:59:52
+ * @LastEditTime: 2024-11-28 14:44:05
  * @FilePath: \total_controller\User\app\app_pis_proc.c
  * @Description:
  *
@@ -88,6 +88,14 @@ static void handle_seat_align_to_direction(uint8_t *payload, uint8_t len)
     case 2:
         printf("调整全部座椅到2位端(司机侧)\n");
         send_seat_align_to_direction(2);
+        break;
+    case 3:
+        printf("调整全部座椅到向前\n");
+        send_seat_align_to_direction(3);
+        break;
+    case 4:
+        printf("调整全部座椅到向后\n");
+        send_seat_align_to_direction(4);
         break;
     default:
         printf("未知的座椅方向: %d\n", payload[0]);
