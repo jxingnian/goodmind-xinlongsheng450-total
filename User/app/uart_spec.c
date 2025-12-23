@@ -127,6 +127,7 @@ int32_t push_uart_send_data(int uart_id, uart_send_data_t *data)
     default:
         return -1;
     }
+    rb_push_back(rb, (char *)data, sizeof(uart_send_data_t), 1);
     return rb_push_back(rb, (char *)data, sizeof(uart_send_data_t), 1);
 }
 

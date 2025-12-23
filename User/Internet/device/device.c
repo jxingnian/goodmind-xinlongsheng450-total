@@ -90,11 +90,11 @@ void set_network(void)
 void set_default(void)
 {
     // 定义默认的网络参数
-  uint8 mac[6]={0x00,0x08,0xdc,0x11,0x11,0x11};
-  uint8 lip[4]={192,168,82,52};
-  uint8 sub[4]={255,255,255,0};
-  uint8 gw[4]={192,168,81,51};
-  uint8 dns[4]={8,8,8,8};
+    uint8 mac[6] = {0x00, 0x08, 0xdc, 0x11, 0x11, 0x11};
+    uint8 lip[4] = {192, 168, 82, 52};
+    uint8 sub[4] = {255, 255, 255, 0};
+    uint8 gw[4] = {192, 168, 81, 51};
+    uint8 dns[4] = {8, 8, 8, 8};
 
     // 将默认参数复制到配置结构体中
     memcpy(ConfigMsg.lip, lip, 4);

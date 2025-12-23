@@ -118,7 +118,7 @@ static void dacai_notify_button(uint16 screen_id, uint16 control_id, uint8 state
         case 8: /* 1A/2A/1F/2F */
             send_seat_into_guest_mode(0x30);
             break;
-    
+
         case 9: /* 1A/2A/2F/3F */
             send_seat_into_guest_mode(0x31);
             break;

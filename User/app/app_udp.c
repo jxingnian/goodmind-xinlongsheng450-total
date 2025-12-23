@@ -54,18 +54,18 @@ static void tmr_udp_process_loop(int timer_id, void *data)
 //        setDIPR(0, DIP);
 //        setDHAR(0, DHAR);
 //        setDPORT(0, 8002);
-//				uint8_t mode = 0x82;
-//				mode |= (1 << 5); 
-//				IINCHIP_WRITE(Sn_MR(0), mode);
-//				socket(0, mode, 8002, 0);                   /*初始化socket 0的套接字*/
-//				
+//              uint8_t mode = 0x82;
+//              mode |= (1 << 5);
+//              IINCHIP_WRITE(Sn_MR(0), mode);
+//              socket(0, mode, 8002, 0);                   /*初始化socket 0的套接字*/
+//
 //        // 接收
-//				setDIPR(1, LDIP);
+//              setDIPR(1, LDIP);
 //        setDHAR(1, LDHAR);
 //        setDPORT(1, 8003);
-//				IINCHIP_WRITE(Sn_MR(1), mode);
-//				socket(1, mode, 8003, 0);                   /*初始化socket 1的套接字*/
-//				
+//              IINCHIP_WRITE(Sn_MR(1), mode);
+//              socket(1, mode, 8003, 0);                   /*初始化socket 1的套接字*/
+//
         break;
     }
 }
@@ -86,24 +86,24 @@ void app_udp_init(void)
     /***** W5500的IP信息初始化 *****/
     set_default();                       // 设置默认MAC、IP、GW、SUB、DNS
     set_network();
-    
-          // 发送
-        setDIPR(0, DIP);
-        setDHAR(0, DHAR);
-        setDPORT(0, 8002);
-				uint8_t mode = 0x82;
-				mode |= (1 << 5); 
-				IINCHIP_WRITE(Sn_MR(0), mode);
-				socket(0, mode, 8002, 0);                   /*初始化socket 0的套接字*/
-				
-        // 接收
-				setDIPR(1, LDIP);
-        setDHAR(1, LDHAR);
-        setDPORT(1, 8003);
-				IINCHIP_WRITE(Sn_MR(1), mode);
-				socket(1, mode, 8003, 0);                   /*初始化socket 1的套接字*/
-				
-        
+
+    // 发送
+    setDIPR(0, DIP);
+    setDHAR(0, DHAR);
+    setDPORT(0, 8002);
+    uint8_t mode = 0x82;
+    mode |= (1 << 5);
+    IINCHIP_WRITE(Sn_MR(0), mode);
+    socket(0, mode, 8002, 0);                   /*初始化socket 0的套接字*/
+
+    // 接收
+    setDIPR(1, LDIP);
+    setDHAR(1, LDHAR);
+    setDPORT(1, 8003);
+    IINCHIP_WRITE(Sn_MR(1), mode);
+    socket(1, mode, 8003, 0);                   /*初始化socket 1的套接字*/
+
+
     start_udp_timer();
 }
 

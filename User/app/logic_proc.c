@@ -2,27 +2,27 @@
  * @Author: XingNian j_xingnian@163.com
  * @Date: 2024-09-11 18:19:19
  * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-11-28 14:41:04
+ * @LastEditTime: 2024-12-04 12:50:26
  * @FilePath: \total_controller\User\app\logic_proc.c
- * @Description: Âß¼­´¦ÀíÄ£¿é£¬°üº¬×ùÒÎ¿ØÖÆºÍ×´Ì¬¹ÜÀí
+ * @Description: é€»è¾‘å¤„ç†æ¨¡å—ï¼ŒåŒ…å«åº§æ¤…æ§åˆ¶å’ŒçŠ¶æ€ç®¡ç†
  *
  * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  */
 
 #include "logic_proc.h"
 
-// ¶¨Òå²Ù×÷Âë
-#define OPCODE_READ_REG  0x03  // ¶Á¼Ä´æÆ÷²Ù×÷Âë
-#define OPCODE_WRITE_REG 0x06  // Ğ´¼Ä´æÆ÷²Ù×÷Âë
-#define OPCODE_OTHRE     0x09  // ÆäËû²Ù×÷Âë
+// å®šä¹‰æ“ä½œç 
+#define OPCODE_READ_REG  0x03  // è¯»å¯„å­˜å™¨æ“ä½œç 
+#define OPCODE_WRITE_REG 0x06  // å†™å¯„å­˜å™¨æ“ä½œç 
+#define OPCODE_OTHRE     0x09  // å…¶ä»–æ“ä½œç 
 
-// ¶¨Òå¼ÆËãÊı×éÔªËØ¸öÊıµÄºê
+// å®šä¹‰è®¡ç®—æ•°ç»„å…ƒç´ ä¸ªæ•°çš„å®
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(*array))
 
-// ×ùÒÎ¿ØÖÆĞÅÏ¢Êı×é
+// åº§æ¤…æ§åˆ¶ä¿¡æ¯æ•°ç»„
 seat_t seat_ctrl_info[20];
 
-// ÉùÃ÷¾²Ì¬º¯Êı
+// å£°æ˜é™æ€å‡½æ•°
 static int method_total_ctrl_read_reg_resp(uint8_t device_addr, uint16_t opcode,
                                            const uint8_t *data, uint32_t len);
 static int method_total_ctrl_write_reg_resp(uint8_t device_addr, uint16_t opcode,
@@ -30,68 +30,27 @@ static int method_total_ctrl_write_reg_resp(uint8_t device_addr, uint16_t opcode
 static int method_total_ctrl_other_resp(uint8_t device_addr, uint16_t opcode,
                                         const uint8_t *data, uint32_t len);
 
-// ¶¨ÒåÃüÁî±í
+// å®šä¹‰å‘½ä»¤è¡¨
 const method_cmd_table_t cmd_total_ctrl_table[] = {
     {OPCODE_READ_REG, method_total_ctrl_read_reg_resp},
     {OPCODE_WRITE_REG, method_total_ctrl_write_reg_resp},
     {OPCODE_OTHRE, method_total_ctrl_other_resp},
 };
 
-// ¶¨ÒåÂß¼­ÈÎÎñ¶¨Ê±Æ÷
+// å®šä¹‰é€»è¾‘ä»»åŠ¡å®šæ—¶å™¨
 static tmr_t tmr_logic_task;
 
-// ¶¨Òå×ùÒÎ×´Ì¬½á¹¹Ìå
+// å®šä¹‰åº§æ¤…çŠ¶æ€ç»“æ„ä½“
 typedef struct {
-    uint8_t call_status;      // ×ùÒÎºô½Ğ×´Ì¬
-    uint16_t current_position; // µ±Ç°Ğı×ªÎ»ÖÃ
-    uint8_t error_status;     // Òì³£×´Ì¬
-    uint8_t hole_ctrl_cmd;    // ¶´¿Ú¿ØÖÆÖ¸Áî£º0x00-ÎŞÖ¸Áî£¬0xA1-´ò¿ª£¬0xA2-¹Ø±Õ
+    uint8_t call_status;      // åº§æ¤…å‘¼å«çŠ¶æ€
+    uint16_t current_position; // å½“å‰æ—‹è½¬ä½ç½®
+    uint8_t error_status;     // å¼‚å¸¸çŠ¶æ€
+    uint8_t hole_ctrl_cmd;    // æ´å£æ§åˆ¶æŒ‡ä»¤ï¼š0x00-æ— æŒ‡ä»¤ï¼Œ0xA1-æ‰“å¼€ï¼Œ0xA2-å…³é—­
 } chair_status_t;
 
-// ×ùÒÎ×´Ì¬Êı×é
+// åº§æ¤…çŠ¶æ€æ•°ç»„
 chair_status_t chair_status[SEAT_COUNT];
 
-// // ¶¨Òå×ùÒÎ×´Ì¬±¨¸æÁªºÏÌå
-// typedef union {
-//     struct {
-//         uint8_t seat5 : 3;     // ×ùÒÎ5×´Ì¬£¬Õ¼3Î»
-//         uint8_t seat6 : 3;     // ×ùÒÎ6×´Ì¬£¬Õ¼3Î»
-//         uint8_t reserved1 : 2; // ±£ÁôÎ»
-//         uint8_t seat3 : 3;     // ×ùÒÎ3×´Ì¬£¬Õ¼3Î»
-//         uint8_t seat4 : 3;     // ×ùÒÎ4×´Ì¬£¬Õ¼3Î»
-//         uint8_t reserved2 : 2; // ±£ÁôÎ»
-//         uint8_t seat1 : 3;     // ×ùÒÎ1×´Ì¬£¬Õ¼3Î»
-//         uint8_t seat2 : 3;     // ×ùÒÎ2×´Ì¬£¬Õ¼3Î»
-//         uint16_t reserved3 : 2; // ±£ÁôÎ»
-//     } seats;
-//     uint8_t buff[3];           // 3×Ö½Ú»º³åÇø£¬ÓÃÓÚÖ±½Ó·ÃÎÊ
-// } SeatStatusReport;
-typedef struct {
-    uint16_t seat1;
-    uint16_t seat2;
-    uint16_t seat3;
-    uint16_t seat4;
-    uint16_t seat5;
-    uint16_t seat6;
-}SeatStatusReport;
-/**
- * @brief ÉèÖÃ×ùÒÎÎ»ÖÃ
- * @param report ×ùÒÎ×´Ì¬±¨¸æÖ¸Õë
- * @param seat_index ×ùÒÎË÷Òı£¨0-5£©
- * @param status ×´Ì¬Öµ£¨0-7£©
- */
-void set_seat_status(SeatStatusReport *report, int seat_index, uint8_t status) {
-    switch (seat_index) {
-        case 0: report->seat1 = (uint16_t)status; break;
-        case 1: report->seat2 = (uint16_t)status; break;
-        case 2: report->seat3 = (uint16_t)status; break;
-        case 3: report->seat4 = (uint16_t)status; break;
-        case 4: report->seat5 = (uint16_t)status; break;
-        case 5: report->seat6 = (uint16_t)status; break;
-    }
-}
-
-SeatStatusReport seat_position_report;
 uint8_t call_status_report[3] = {0};
 static void logic_task(int timer_id, void *data)
 {
@@ -99,19 +58,19 @@ static void logic_task(int timer_id, void *data)
     uint8_t data_buf[12];
     uint8_t data_len = 5;
     uint8_t addr;
-    uint8_t opcode=0;
+    uint8_t opcode = 0;
     static uint8_t addr_count = 0x01;
     // static uint8_t Foot_hole_addr_count = 0x0;
     // static uint8_t Foot_hole_addr = 0x81;
     static int32_t count;
 
-//´®¿Ú·¢ËÍÊı¾İ
-    if (tmr_uart_send_rb_timeout(0, NULL)!=0) {
+//ä¸²å£å‘é€æ•°æ®
+    if (tmr_uart_send_rb_timeout(0, NULL) != 0) {
         return;
     }
 
-//100ms·¢ËÍÒ»´ÎÖ÷¿Ø²éÑ¯
-    if (count%2==0) { 
+//100mså‘é€ä¸€æ¬¡ä¸»æ§æŸ¥è¯¢
+    if (count % 2 == 0) {
         addr = addr_count;
         opcode = OPCODE_READ_REG;
         data_buf[0] = 0x05;
@@ -127,14 +86,15 @@ static void logic_task(int timer_id, void *data)
             send_data.uc_data_len = len;
 
             push_uart_send_data(LEFT_CTRL_UART, &send_data);
+            push_uart_send_data(RIGHT_CTRL_UART, &send_data);
         }
-				
+
         if (addr_count++ >= SEAT_COUNT) {
             addr_count = 0x01;
         }
     }
 
-    // if (count%2==0) { 
+    // if (count%2==0) {
     //     opcode = 0x03;
     //     data_buf[0] = 0x03;
     //     data_buf[1] = 0x00;
@@ -153,11 +113,13 @@ static void logic_task(int timer_id, void *data)
     //     }
     // }
 
-//Ò»ÃëÉÏ±¨pis
+//ä¸€ç§’ä¸ŠæŠ¥pis
     static uint8_t fast_timer = 0;
+
+    uint8_t position_report_array[12] = 0;
     if (fast_timer >= 20) { // 1s
         fast_timer = 0;
-        
+
         uint8_t seat_error_report[3] = {0};
 
         for (int i = 0; i < SEAT_COUNT; i++) {
@@ -166,348 +128,359 @@ static void logic_task(int timer_id, void *data)
             } else {
                 call_status_report[2 - i / 8] &= ~(1 << (i % 8));
             }
-            set_seat_status(&seat_position_report, i, chair_status[i].current_position);
-            if (chair_status[i].error_status==1)
+            if (chair_status[i].error_status == 1)
                 seat_error_report[2 - i / 8] |= (1 << (i % 8));
             else {
                 seat_error_report[2 - i / 8] &= ~(1 << (i % 8));
             }
         }
-        send_data_to_pis(0x01, call_status_report, sizeof(call_status_report));
-        // send_data_to_pis(0x02, seat_position_report.buff, 12);
-        //·¢ËÍ×ùÒÎÎ»ÖÃ
+        position_report_array[1] = (uint8_t)(chair_status[5].current_position);
+        position_report_array[3] = (uint8_t)(chair_status[4].current_position);
+        position_report_array[5] = (uint8_t)(chair_status[3].current_position);
+        position_report_array[7] = (uint8_t)(chair_status[2].current_position);
+        position_report_array[9] = (uint8_t)(chair_status[1].current_position);
+        position_report_array[11] = (uint8_t)(chair_status[0].current_position);
 
+        send_data_to_pis(0x01, call_status_report, sizeof(call_status_report));
+
+        send_data_to_pis(0x02, position_report_array, sizeof(position_report_array));
+
+        //å‘é€åº§æ¤…ä½ç½®
         send_data_to_pis(0x03, seat_error_report, sizeof(seat_error_report));
     }
 
     fast_timer++;
     count++;
-		// if(opcode){
-		// 	uart_send_data_t send_data;
-		// 	uint8_t len = do_spec_data_package(send_data.uca_data, Foot_hole_addr, opcode, data_buf, data_len);
-		// 	send_data.uc_data_len = len;
-		// 	push_uart_send_data(RIGHT_CTRL_UART, &send_data);
-		// }
+    // if(opcode){
+    //  uart_send_data_t send_data;
+    //  uint8_t len = do_spec_data_package(send_data.uca_data, Foot_hole_addr, opcode, data_buf, data_len);
+    //  send_data.uc_data_len = len;
+    //  push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+    // }
 }
-// Âß¼­´¦Àí³õÊ¼»¯º¯Êı
+// é€»è¾‘å¤„ç†åˆå§‹åŒ–å‡½æ•°
 void logic_proc_init(void)
 {
-    // ³õÊ¼»¯ÃüÁî¿ØÖÆ±í£¬·Ö±ğÎªUART2ºÍUART4
+    // åˆå§‹åŒ–å‘½ä»¤æ§åˆ¶è¡¨ï¼Œåˆ†åˆ«ä¸ºUART2å’ŒUART4
     method_cmd_init(&huart2, cmd_total_ctrl_table, ARRAY_SIZE(cmd_total_ctrl_table));
     method_cmd_init(&huart4, cmd_total_ctrl_table, ARRAY_SIZE(cmd_total_ctrl_table));
 
-    // Æô¶¯¶¨Ê±Æ÷£¬Ã¿50msÖ´ĞĞÒ»´Îlogic_task
+    // å¯åŠ¨å®šæ—¶å™¨ï¼Œæ¯50msæ‰§è¡Œä¸€æ¬¡logic_task
     start_rpt_tmr(&tmr_logic_task, logic_task, MS_TO_TICKS(50));
 }
 
-// Òì»òĞ£ÑéºÍ¼ÆËãº¯Êı
+// å¼‚æˆ–æ ¡éªŒå’Œè®¡ç®—å‡½æ•°
 uint8_t xor_crc(uint8_t *puchMsg, uint16_t usDataLen)
 {
     uint8_t _dat = 0;
     uint16_t i = 0;
-    // ±éÀúÏûÏ¢ÖĞµÄÃ¿¸ö×Ö½Ú½øĞĞÒì»òÔËËã
+    // éå†æ¶ˆæ¯ä¸­çš„æ¯ä¸ªå­—èŠ‚è¿›è¡Œå¼‚æˆ–è¿ç®—
     for (i = 0; i < usDataLen; i++) {
         _dat = _dat ^ puchMsg[i];
     }
     return _dat;
 }
 
-// ·¢ËÍÖØÖÃºô½ĞÃüÁîº¯Êı
+// å‘é€é‡ç½®å‘¼å«å‘½ä»¤å‡½æ•°
 void send_reset_call(uint8_t seat_index)
 {
-    uint8_t data_buf[12];  // Êı¾İ»º³åÇø
-    uint8_t data_len = 0;  // Êı¾İ³¤¶È
-    uint8_t addr;          // Éè±¸µØÖ·
-    uint8_t opcode;        // ²Ù×÷Âë
+    uint8_t data_buf[12];  // æ•°æ®ç¼“å†²åŒº
+    uint8_t data_len = 0;  // æ•°æ®é•¿åº¦
+    uint8_t addr;          // è®¾å¤‡åœ°å€
+    uint8_t opcode;        // æ“ä½œç 
 
-    // ÉèÖÃ²ÎÊı
-    addr = seat_index;             // ×ùÎ»Ë÷Òı×÷ÎªµØÖ·
-    opcode = OPCODE_WRITE_REG;     // ²Ù×÷ÂëÉèÎªĞ´¼Ä´æÆ÷
-    data_buf[0] = 0x06;            // ¹¦ÄÜÂë£ºÖØÖÃºô½Ğ
-    data_buf[1] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[2] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[3] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[4] = 0x00;            // ±£Áô×Ö½Ú
-    data_len = 5;                  // ÉèÖÃÊı¾İ³¤¶È
+    // è®¾ç½®å‚æ•°
+    addr = seat_index;             // åº§ä½ç´¢å¼•ä½œä¸ºåœ°å€
+    opcode = OPCODE_WRITE_REG;     // æ“ä½œç è®¾ä¸ºå†™å¯„å­˜å™¨
+    data_buf[0] = 0x06;            // åŠŸèƒ½ç ï¼šé‡ç½®å‘¼å«
+    data_buf[1] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[2] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[3] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[4] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_len = 5;                  // è®¾ç½®æ•°æ®é•¿åº¦
 
-    // ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÔÚÓĞĞ§·¶Î§ÄÚ
+    // æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†…
     if (data_len > 0 && data_len < 40) {
         uart_send_data_t send_data;
-        // ´ò°üÊı¾İ
+        // æ‰“åŒ…æ•°æ®
         uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
         send_data.uc_data_len = len;
 
-        // ·¢ËÍÊı¾İµ½×ó²à¿ØÖÆUART
+        // å‘é€æ•°æ®åˆ°å·¦ä¾§æ§åˆ¶UART
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
-/* µ÷ÕûÈ«²¿×ùÒÎµ½Ö¸¶¨³µÁ¾ÔËĞĞ·½Ïò */
+/* è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°æŒ‡å®šè½¦è¾†è¿è¡Œæ–¹å‘ */
 void send_seat_align_to_direction(uint8_t direction)
 {
-    uint8_t data_buf[12];  // Êı¾İ»º³åÇø
-    uint8_t data_len = 0;  // Êı¾İ³¤¶È
-    uint8_t addr;          // Éè±¸µØÖ·
-    uint8_t opcode;        // ²Ù×÷Âë
+    uint8_t data_buf[12];  // æ•°æ®ç¼“å†²åŒº
+    uint8_t data_len = 0;  // æ•°æ®é•¿åº¦
+    uint8_t addr;          // è®¾å¤‡åœ°å€
+    uint8_t opcode;        // æ“ä½œç 
 
-    /* ³õÊ¼»¯²ÎÊı */
-    addr = 0x99;                   // ÉèÖÃ¹ã²¥µØÖ·
-    opcode = OPCODE_WRITE_REG;     // ÉèÖÃ²Ù×÷ÂëÎªĞ´¼Ä´æÆ÷
-    
-    /* ¸ù¾İ·½ÏòÉèÖÃ¹¦ÄÜÂë */
+    /* åˆå§‹åŒ–å‚æ•° */
+    addr = 0x99;                   // è®¾ç½®å¹¿æ’­åœ°å€
+    opcode = OPCODE_WRITE_REG;     // è®¾ç½®æ“ä½œç ä¸ºå†™å¯„å­˜å™¨
+
+    /* æ ¹æ®æ–¹å‘è®¾ç½®åŠŸèƒ½ç  */
     if (direction == 1) {
-        data_buf[0] = 0x01;        // 1Î»¶Ë·½Ïò
-    } else if (direction == 2){
-        data_buf[0] = 0x02;        // 2Î»¶Ë·½Ïò
-    }else if (direction == 3){
-        data_buf[0] = 0x03;        // ÏòÇ°
-    }else if (direction == 4){
-        data_buf[0] = 0x04;        // Ïòºó
+        data_buf[0] = 0x01;        // 1ä½ç«¯æ–¹å‘
+    } else if (direction == 2) {
+        data_buf[0] = 0x02;        // 2ä½ç«¯æ–¹å‘
+    } else if (direction == 3) {
+        data_buf[0] = 0x03;        // å‘å‰
+    } else if (direction == 4) {
+        data_buf[0] = 0x04;        // å‘å
     }
-    
-    /* ÉèÖÃÊ£ÓàÊı¾İ»º³åÇø */
-    data_buf[1] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[2] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[3] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[4] = 0x00;            // ±£Áô×Ö½Ú
-    data_len = 5;                  // ÉèÖÃÊı¾İ³¤¶È
 
-    /* ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÔÚÓĞĞ§·¶Î§ÄÚ */
+    /* è®¾ç½®å‰©ä½™æ•°æ®ç¼“å†²åŒº */
+    data_buf[1] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[2] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[3] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[4] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_len = 5;                  // è®¾ç½®æ•°æ®é•¿åº¦
+
+    /* æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†… */
     if (data_len > 0 && data_len < 40) {
         uart_send_data_t send_data;
-        // ´ò°üÊı¾İ
+        // æ‰“åŒ…æ•°æ®
         uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
         send_data.uc_data_len = len;
 
-        // ·¢ËÍÊı¾İµ½×ó²à¿ØÖÆUART
+        // å‘é€æ•°æ®åˆ°å·¦ä¾§æ§åˆ¶UART
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        // ×¢ÊÍµôµÄÓÒ²à¿ØÖÆUART·¢ËÍ
-        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // æ³¨é‡Šæ‰çš„å³ä¾§æ§åˆ¶UARTå‘é€
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
-/* µ÷Õû×ùÒÎ½øÈë»áÒéÄ£Ê½ */
+/* è°ƒæ•´åº§æ¤…è¿›å…¥ä¼šè®®æ¨¡å¼ */
 void send_seat_into_meeting_mode(void)
 {
-    uint8_t data_buf[12];  // Êı¾İ»º³åÇø
-    uint8_t data_len = 0;  // Êı¾İ³¤¶È
-    uint8_t addr;          // Éè±¸µØÖ·
-    uint8_t opcode;        // ²Ù×÷Âë
+    uint8_t data_buf[12];  // æ•°æ®ç¼“å†²åŒº
+    uint8_t data_len = 0;  // æ•°æ®é•¿åº¦
+    uint8_t addr;          // è®¾å¤‡åœ°å€
+    uint8_t opcode;        // æ“ä½œç 
 
-    /* ³õÊ¼»¯²ÎÊı */
-    addr = 0x99;                   // ÉèÖÃ¹ã²¥µØÖ·
-    opcode = OPCODE_WRITE_REG;     // ÉèÖÃ²Ù×÷ÂëÎªĞ´¼Ä´æÆ÷
-    data_buf[0] = 0x05;            // ¹¦ÄÜÂë£º½øÈë»áÒéÄ£Ê½
-    data_buf[1] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[2] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[3] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[4] = 0x00;            // ±£Áô×Ö½Ú
-    data_len = 5;                  // ÉèÖÃÊı¾İ³¤¶È
+    /* åˆå§‹åŒ–å‚æ•° */
+    addr = 0x99;                   // è®¾ç½®å¹¿æ’­åœ°å€
+    opcode = OPCODE_WRITE_REG;     // è®¾ç½®æ“ä½œç ä¸ºå†™å¯„å­˜å™¨
+    data_buf[0] = 0x05;            // åŠŸèƒ½ç ï¼šè¿›å…¥ä¼šè®®æ¨¡å¼
+    data_buf[1] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[2] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[3] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[4] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_len = 5;                  // è®¾ç½®æ•°æ®é•¿åº¦
 
-    /* ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÔÚÓĞĞ§·¶Î§ÄÚ */
+    /* æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†… */
     if (data_len > 0 && data_len < 40) {
         uart_send_data_t send_data;
-        // ´ò°üÊı¾İ
+        // æ‰“åŒ…æ•°æ®
         uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
         send_data.uc_data_len = len;
 
-        // ·¢ËÍÊı¾İµ½×ó²à¿ØÖÆUART
+        // å‘é€æ•°æ®åˆ°å·¦ä¾§æ§åˆ¶UART
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        // ×¢ÊÍµôµÄÓÒ²à¿ØÖÆUART·¢ËÍ
-        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // æ³¨é‡Šæ‰çš„å³ä¾§æ§åˆ¶UARTå‘é€
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
-/* ÉèÖÃ×ùÒÎ½øÈë¿ÍÈËÄ£Ê½ */
+/* è®¾ç½®åº§æ¤…è¿›å…¥å®¢äººæ¨¡å¼ */
 void send_seat_into_guest_mode(uint8_t mode)
 {
-    uint8_t data_buf[12];  // Êı¾İ»º³åÇø
-    uint8_t data_len = 0;  // Êı¾İ³¤¶È
-    uint8_t addr;          // Éè±¸µØÖ·
-    uint8_t opcode;        // ²Ù×÷Âë
+    uint8_t data_buf[12];  // æ•°æ®ç¼“å†²åŒº
+    uint8_t data_len = 0;  // æ•°æ®é•¿åº¦
+    uint8_t addr;          // è®¾å¤‡åœ°å€
+    uint8_t opcode;        // æ“ä½œç 
 
-    /* ³õÊ¼»¯²ÎÊı */
-    addr = 0x99;                   // ÉèÖÃ¹ã²¥µØÖ·
-    opcode = OPCODE_WRITE_REG;     // ÉèÖÃ²Ù×÷ÂëÎªĞ´¼Ä´æÆ÷
-    data_buf[0] = 0x09;            // ¹¦ÄÜÂë£ºÉèÖÃ¿ÍÈËÄ£Ê½
-    data_buf[1] = mode;            // ¿ÍÈËÄ£Ê½²ÎÊı
-    data_buf[2] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[3] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[4] = 0x00;            // ±£Áô×Ö½Ú
-    data_len = 5;                  // ÉèÖÃÊı¾İ³¤¶È
+    /* åˆå§‹åŒ–å‚æ•° */
+    addr = 0x99;                   // è®¾ç½®å¹¿æ’­åœ°å€
+    opcode = OPCODE_WRITE_REG;     // è®¾ç½®æ“ä½œç ä¸ºå†™å¯„å­˜å™¨
+    data_buf[0] = 0x09;            // åŠŸèƒ½ç ï¼šè®¾ç½®å®¢äººæ¨¡å¼
+    data_buf[1] = mode;            // å®¢äººæ¨¡å¼å‚æ•°
+    data_buf[2] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[3] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[4] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_len = 5;                  // è®¾ç½®æ•°æ®é•¿åº¦
 
-    /* ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÔÚÓĞĞ§·¶Î§ÄÚ */
+    /* æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†… */
     if (data_len > 0 && data_len < 40) {
         uart_send_data_t send_data;
-        // ´ò°üÊı¾İ
+        // æ‰“åŒ…æ•°æ®
         uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
         send_data.uc_data_len = len;
 
-        // ·¢ËÍÊı¾İµ½×ó²à¿ØÖÆUART
+        // å‘é€æ•°æ®åˆ°å·¦ä¾§æ§åˆ¶UART
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        // ×¢ÊÍµôµÄÓÒ²à¿ØÖÆUART·¢ËÍ
-        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // æ³¨é‡Šæ‰çš„å³ä¾§æ§åˆ¶UARTå‘é€
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
-/* ·¢ËÍ×ùÒÎĞı×ª¼±Í£ÃüÁî */
+/* å‘é€åº§æ¤…æ—‹è½¬æ€¥åœå‘½ä»¤ */
 void send_seat_rotation_estop(void)
 {
-    uint8_t data_buf[12];  // Êı¾İ»º³åÇø
-    uint8_t data_len = 0;  // Êı¾İ³¤¶È
-    uint8_t addr;          // Éè±¸µØÖ·
-    uint8_t opcode;        // ²Ù×÷Âë
+    uint8_t data_buf[12];  // æ•°æ®ç¼“å†²åŒº
+    uint8_t data_len = 0;  // æ•°æ®é•¿åº¦
+    uint8_t addr;          // è®¾å¤‡åœ°å€
+    uint8_t opcode;        // æ“ä½œç 
 
-    /* ³õÊ¼»¯²ÎÊı */
-    addr = 0x99;                   // ÉèÖÃ¹ã²¥µØÖ·
-    opcode = OPCODE_WRITE_REG;     // ÉèÖÃ²Ù×÷ÂëÎªĞ´¼Ä´æÆ÷
-    data_buf[0] = 0x07;            // ¹¦ÄÜÂë£º×ùÒÎĞı×ª¼±Í£
-    data_buf[1] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[2] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[3] = 0x00;            // ±£Áô×Ö½Ú
-    data_buf[4] = 0x00;            // ±£Áô×Ö½Ú
-    data_len = 5;                  // ÉèÖÃÊı¾İ³¤¶È
+    /* åˆå§‹åŒ–å‚æ•° */
+    addr = 0x99;                   // è®¾ç½®å¹¿æ’­åœ°å€
+    opcode = OPCODE_WRITE_REG;     // è®¾ç½®æ“ä½œç ä¸ºå†™å¯„å­˜å™¨
+    data_buf[0] = 0x07;            // åŠŸèƒ½ç ï¼šåº§æ¤…æ—‹è½¬æ€¥åœ
+    data_buf[1] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[2] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[3] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_buf[4] = 0x00;            // ä¿ç•™å­—èŠ‚
+    data_len = 5;                  // è®¾ç½®æ•°æ®é•¿åº¦
 
-    /* ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÔÚÓĞĞ§·¶Î§ÄÚ */
+    /* æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†… */
     if (data_len > 0 && data_len < 40) {
         uart_send_data_t send_data;
-        // ´ò°üÊı¾İ
+        // æ‰“åŒ…æ•°æ®
         uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
         send_data.uc_data_len = len;
 
-        // ·¢ËÍÊı¾İµ½×ó²à¿ØÖÆUART
+        // å‘é€æ•°æ®åˆ°å·¦ä¾§æ§åˆ¶UART
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
-        // ×¢ÊÍµôµÄÓÒ²à¿ØÖÆUART·¢ËÍ
-        // push_uart_send_data(RIGHT_CTRL_UART, &send_data);
+        // æ³¨é‡Šæ‰çš„å³ä¾§æ§åˆ¶UARTå‘é€
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
-/* ÉèÖÃµ¥¸ö×ùÒÎµÄÎ»ÖÃ */
+/* è®¾ç½®å•ä¸ªåº§æ¤…çš„ä½ç½® */
 void send_seat_position_set(uint8_t seat_num, uint8_t position)
 {
-    uint8_t data_buf[12];  // Êı¾İ»º³åÇø
-    uint8_t data_len = 0;  // Êı¾İ³¤¶È
-    uint8_t addr;          // ×ùÒÎµØÖ·
-    uint8_t opcode;        // ²Ù×÷Âë
+    uint8_t data_buf[12];  // æ•°æ®ç¼“å†²åŒº
+    uint8_t data_len = 0;  // æ•°æ®é•¿åº¦
+    uint8_t addr;          // åº§æ¤…åœ°å€
+    uint8_t opcode;        // æ“ä½œç 
 
-    /* ÉèÖÃ×ùÒÎµØÖ·ºÍ²Ù×÷Âë */
+    /* è®¾ç½®åº§æ¤…åœ°å€å’Œæ“ä½œç  */
     addr = seat_num;
-    opcode = OPCODE_WRITE_REG;  // Ğ´¼Ä´æÆ÷²Ù×÷
+    opcode = OPCODE_WRITE_REG;  // å†™å¯„å­˜å™¨æ“ä½œ
 
-    /* ¸ù¾İÎ»ÖÃÉèÖÃÏàÓ¦µÄÃüÁî */
+    /* æ ¹æ®ä½ç½®è®¾ç½®ç›¸åº”çš„å‘½ä»¤ */
     switch (position) {
-    case 0: 
-        printf("ÉèÖÃµ½1Î»¶Ë»ØĞĞ·½Ïò\n");
+    case 0:
+        printf("è®¾ç½®åˆ°1ä½ç«¯å›è¡Œæ–¹å‘\n");
         data_buf[0] = 0x03;
         break;
-    case 1: 
-        printf("ÉèÖÃµ½2Î»¶Ë»ØĞĞ·½Ïò\n");
+    case 1:
+        printf("è®¾ç½®åˆ°2ä½ç«¯å›è¡Œæ–¹å‘\n");
         data_buf[0] = 0x04;
         break;
-    case 2: 
-        printf("ÉèÖÃµ½»áÒéÄ£Ê½\n");
+    case 2:
+        printf("è®¾ç½®åˆ°ä¼šè®®æ¨¡å¼\n");
         data_buf[0] = 0x05;
         break;
-    case 3: 
-        printf("ÉèÖÃµ½1Î»¶ËÔËĞĞ·½Ïò\n");
+    case 3:
+        printf("è®¾ç½®åˆ°1ä½ç«¯è¿è¡Œæ–¹å‘\n");
         data_buf[0] = 0x01;
         break;
-    case 4: 
-        printf("ÉèÖÃµ½2Î»¶ËÔËĞĞ·½Ïò\n");
+    case 4:
+        printf("è®¾ç½®åˆ°2ä½ç«¯è¿è¡Œæ–¹å‘\n");
         data_buf[0] = 0x02;
         break;
-    default: 
-        printf("Î´ÖªµÄ×ùÒÎÎ»ÖÃ: %d\n", position);
-        return;  // Î´ÖªÎ»ÖÃ£¬Ö±½Ó·µ»Ø
+    default:
+        printf("æœªçŸ¥çš„åº§æ¤…ä½ç½®: %d\n", position);
+        return;  // æœªçŸ¥ä½ç½®ï¼Œç›´æ¥è¿”å›
     }
 
-    /* ÉèÖÃÊ£ÓàµÄÊı¾İ»º³åÇø */
+    /* è®¾ç½®å‰©ä½™çš„æ•°æ®ç¼“å†²åŒº */
     data_buf[1] = 0x00;
     data_buf[2] = 0x00;
     data_buf[3] = 0x00;
     data_buf[4] = 0x00;
-    data_len = 5;  // ÉèÖÃÊı¾İ³¤¶È
+    data_len = 5;  // è®¾ç½®æ•°æ®é•¿åº¦
 
-    /* ¼ì²éÊı¾İ³¤¶È²¢·¢ËÍÊı¾İ */
+    /* æ£€æŸ¥æ•°æ®é•¿åº¦å¹¶å‘é€æ•°æ® */
     if (data_len > 0 && data_len < 40) {
         uart_send_data_t send_data;
-        // ´ò°üÊı¾İ
+        // æ‰“åŒ…æ•°æ®
         uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
         send_data.uc_data_len = len;
 
-        // ·¢ËÍÊı¾İµ½×ó²à¿ØÖÆUART
+        // å‘é€æ•°æ®åˆ°å·¦ä¾§æ§åˆ¶UART
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
 
-/* ÉèÖÃºô½Ğ×´Ì¬ */
+/* è®¾ç½®å‘¼å«çŠ¶æ€ */
 void send_ambient_light_setting(uint8_t seat_num, uint8_t light_status)
 {
-    uint8_t data_buf[12];  // Êı¾İ»º³åÇø
-    uint8_t data_len = 0;  // Êı¾İ³¤¶È
-    uint8_t addr;          // Éè±¸µØÖ·
-    uint8_t opcode;        // ²Ù×÷Âë
+    uint8_t data_buf[12];  // æ•°æ®ç¼“å†²åŒº
+    uint8_t data_len = 0;  // æ•°æ®é•¿åº¦
+    uint8_t addr;          // è®¾å¤‡åœ°å€
+    uint8_t opcode;        // æ“ä½œç 
 
-    /* ³õÊ¼»¯²ÎÊı */
-    addr = seat_num;                // ÉèÖÃÉè±¸µØÖ·Îª×ùÎ»ºÅ
-    opcode = OPCODE_WRITE_REG;      // ÉèÖÃ²Ù×÷ÂëÎªĞ´¼Ä´æÆ÷
-    data_buf[0] = 0x0A;             // ¹¦ÄÜÂë£ºÉèÖÃºô½Ğ
-    data_buf[1] = light_status;     // »·¾³¹â×´Ì¬
-    data_buf[2] = 0x00;             // ±£Áô×Ö½Ú
-    data_buf[3] = 0x00;             // ±£Áô×Ö½Ú
-    data_buf[4] = 0x00;             // ±£Áô×Ö½Ú
-    data_len = 5;                   // ÉèÖÃÊı¾İ³¤¶È
+    /* åˆå§‹åŒ–å‚æ•° */
+    addr = seat_num;                // è®¾ç½®è®¾å¤‡åœ°å€ä¸ºåº§ä½å·
+    opcode = OPCODE_WRITE_REG;      // è®¾ç½®æ“ä½œç ä¸ºå†™å¯„å­˜å™¨
+    data_buf[0] = 0x0A;             // åŠŸèƒ½ç ï¼šè®¾ç½®å‘¼å«
+    data_buf[1] = light_status;     // ç¯å¢ƒå…‰çŠ¶æ€
+    data_buf[2] = 0x00;             // ä¿ç•™å­—èŠ‚
+    data_buf[3] = 0x00;             // ä¿ç•™å­—èŠ‚
+    data_buf[4] = 0x00;             // ä¿ç•™å­—èŠ‚
+    data_len = 5;                   // è®¾ç½®æ•°æ®é•¿åº¦
 
-    /* ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÔÚÓĞĞ§·¶Î§ÄÚ */
+    /* æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†… */
     if (data_len > 0 && data_len < 40) {
         uart_send_data_t send_data;
-        // ´ò°üÊı¾İ
+        // æ‰“åŒ…æ•°æ®
         uint8_t len = do_spec_data_package(send_data.uca_data, addr, opcode, data_buf, data_len);
         send_data.uc_data_len = len;
 
-        // ·¢ËÍÊı¾İµ½×ó²à¿ØÖÆUART
+        // å‘é€æ•°æ®åˆ°å·¦ä¾§æ§åˆ¶UART
         push_uart_send_data(LEFT_CTRL_UART, &send_data);
+        // å‘é€æ•°æ®åˆ°å³ä¾§æ§åˆ¶UART
+        push_uart_send_data(RIGHT_CTRL_UART, &send_data);
     }
 }
-/* µç»ú×´Ì¬Ã¶¾Ù */
+/* ç”µæœºçŠ¶æ€æšä¸¾ */
 typedef enum {
-    MOTOR_AISLE = 14,           /* (11) µç»úÒÆ¶¯µ½¹ıµÀÎ»ÖÃ */
-    MOTOR_FORWARD = 15,         /* (12) µç»úÒÆ¶¯µ½Ç°ÏòÎ»ÖÃ */
-    MOTOR_REAR = 16,            /* (13) µç»úÒÆ¶¯µ½ºóÏòÎ»ÖÃ */
-    MOTOR_YIWEI = 17,           /* (14) µç»úÒÆ¶¯µ½Ò»Î»¶ËÎ»ÖÃ */
-    MOTOR_ERWEI = 18,           /* (15) µç»úÒÆ¶¯µ½¶şÎ»¶ËÎ»ÖÃ */
-    MOTOR_NULL = 100,           /* ÎŞĞ§µç»ú×´Ì¬ */
+    MOTOR_AISLE = 14,           /* (11) ç”µæœºç§»åŠ¨åˆ°è¿‡é“ä½ç½® */
+    MOTOR_FORWARD = 15,         /* (12) ç”µæœºç§»åŠ¨åˆ°å‰å‘ä½ç½® */
+    MOTOR_REAR = 16,            /* (13) ç”µæœºç§»åŠ¨åˆ°åå‘ä½ç½® */
+    MOTOR_YIWEI = 17,           /* (14) ç”µæœºç§»åŠ¨åˆ°ä¸€ä½ç«¯ä½ç½® */
+    MOTOR_ERWEI = 18,           /* (15) ç”µæœºç§»åŠ¨åˆ°äºŒä½ç«¯ä½ç½® */
+    MOTOR_NULL = 100,           /* æ— æ•ˆç”µæœºçŠ¶æ€ */
 } MOTORSTATE;
 
-/* ´¦Àí×Ü¿ØÖÆÆ÷¶Á¼Ä´æÆ÷ÏìÓ¦ */
+/* å¤„ç†æ€»æ§åˆ¶å™¨è¯»å¯„å­˜å™¨å“åº” */
 static int method_total_ctrl_read_reg_resp(uint8_t device_addr, uint16_t opcode,
                                            const uint8_t *data, uint32_t len)
 {
-    /* ¸üĞÂºô½Ğ×´Ì¬ */
+    /* æ›´æ–°å‘¼å«çŠ¶æ€ */
     chair_status[device_addr - 1].call_status = data[1];
 
-    /* ¸üĞÂµ±Ç°×ùÒÎÎ»ÖÃ */
-    chair_status[device_addr - 1].current_position = data[3];  /* µ±Ç°Î»ÖÃ */
+    /* æ›´æ–°å½“å‰åº§æ¤…ä½ç½® */
+    chair_status[device_addr - 1].current_position = data[3];  /* å½“å‰ä½ç½® */
 
-    /* ¸üĞÂ´íÎó×´Ì¬ºÍ¶´¿ØÖÆÃüÁî */
+    /* æ›´æ–°é”™è¯¯çŠ¶æ€å’Œæ´æ§åˆ¶å‘½ä»¤ */
     chair_status[device_addr - 1].error_status = data[2];
     chair_status[device_addr - 1].hole_ctrl_cmd = data[4];
 
     return 0;
 }
 
-/* ´¦Àí×Ü¿ØÖÆÆ÷Ğ´¼Ä´æÆ÷ÏìÓ¦ */
+/* å¤„ç†æ€»æ§åˆ¶å™¨å†™å¯„å­˜å™¨å“åº” */
 static int method_total_ctrl_write_reg_resp(uint8_t device_addr, uint16_t opcode,
                                             const uint8_t *data, uint32_t len)
 {
-    /* ÔİÎŞ¾ßÌåÊµÏÖ */
+    /* æš‚æ— å…·ä½“å®ç° */
     return 0;
 }
 
-/* ´¦Àí×Ü¿ØÖÆÆ÷ÆäËûÏìÓ¦ */
+/* å¤„ç†æ€»æ§åˆ¶å™¨å…¶ä»–å“åº” */
 static int method_total_ctrl_other_resp(uint8_t device_addr, uint16_t opcode,
                                         const uint8_t *data, uint32_t len)
 {
-    /* ÔİÎŞ¾ßÌåÊµÏÖ */
+    /* æš‚æ— å…·ä½“å®ç° */
     return 0;
 }

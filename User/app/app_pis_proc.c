@@ -2,7 +2,7 @@
  * @Author: XingNian j_xingnian@163.com
  * @Date: 2024-09-11 14:26:09
  * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-11-28 14:44:05
+ * @LastEditTime: 2024-12-02 16:37:53
  * @FilePath: \total_controller\User\app\app_pis_proc.c
  * @Description:
  *
@@ -10,25 +10,25 @@
  */
 #include "app_pis_proc.h"
 #include "logic_proc.h"
-/* ¶¨ÒåÖ¡Í·ºÍÖ¡Î² */
-#define FRAME_HEADER_1 0xC5  /* µÚÒ»¸öÖ¡Í·×Ö½Ú */
-#define FRAME_HEADER_2 0xCC  /* µÚ¶ş¸öÖ¡Í·×Ö½Ú */
-#define FRAME_TAIL 0xCE      /* Ö¡Î²×Ö½Ú */
+/* å®šä¹‰å¸§å¤´å’Œå¸§å°¾ */
+#define FRAME_HEADER_1 0xC5  /* ç¬¬ä¸€ä¸ªå¸§å¤´å­—èŠ‚ */
+#define FRAME_HEADER_2 0xCC  /* ç¬¬äºŒä¸ªå¸§å¤´å­—èŠ‚ */
+#define FRAME_TAIL 0xCE      /* å¸§å°¾å­—èŠ‚ */
 
 
-/* ¶¨ÒåÏûÏ¢ÀàĞÍÃ¶¾Ù */
+/* å®šä¹‰æ¶ˆæ¯ç±»å‹æšä¸¾ */
 typedef enum {
-    REQ_RESET_CALL = 0x01,                /* ÖØÖÃºô½ĞÇëÇó */
-    REQ_SEAT_ALIGN_TO_DIRECTION,          /* µ÷ÕûÈ«²¿×ùÒÎµ½Ö¸¶¨³µÁ¾ÔËĞĞ·½Ïò */
-    REQ_SEAT_INTO_MEETING_MODE,           /* ½øÈë»áÒéÄ£Ê½ÇëÇó */
-    REQ_SEAT_GUEST_MODE_ADJUSTMENT,       /* »á¿ÍÄ£Ê½µ÷ÕûÇëÇó */
-    REQ_SEAT_ROTATION_ESTOP,              /* ×ùÒÎĞı×ª¼±Í£ÇëÇó */
-    REQ_SINGLE_SEAT_POSITION_SET,         /* µ¥¸ö×ùÒÎÎ»ÖÃÉèÖÃÇëÇó */
+    REQ_RESET_CALL = 0x01,                /* é‡ç½®å‘¼å«è¯·æ±‚ */
+    REQ_SEAT_ALIGN_TO_DIRECTION,          /* è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°æŒ‡å®šè½¦è¾†è¿è¡Œæ–¹å‘ */
+    REQ_SEAT_INTO_MEETING_MODE,           /* è¿›å…¥ä¼šè®®æ¨¡å¼è¯·æ±‚ */
+    REQ_SEAT_GUEST_MODE_ADJUSTMENT,       /* ä¼šå®¢æ¨¡å¼è°ƒæ•´è¯·æ±‚ */
+    REQ_SEAT_ROTATION_ESTOP,              /* åº§æ¤…æ—‹è½¬æ€¥åœè¯·æ±‚ */
+    REQ_SINGLE_SEAT_POSITION_SET,         /* å•ä¸ªåº§æ¤…ä½ç½®è®¾ç½®è¯·æ±‚ */
     REQ_RESET_ANOMALOUS,
-    REQ_AMBIENT_LIGHT_SETTING,            /* ·ÕÎ§µÆÉèÖÃÇëÇó */
+    REQ_AMBIENT_LIGHT_SETTING,            /* æ°›å›´ç¯è®¾ç½®è¯·æ±‚ */
 } e_msg_type;
 
-/* ¶¨Òå±¨ÎÄ½á¹¹ */
+/* å®šä¹‰æŠ¥æ–‡ç»“æ„ */
 typedef struct {
     uint8_t stx1;
     uint8_t stx2;
@@ -38,12 +38,12 @@ typedef struct {
     uint8_t ver_s2;
     uint8_t fun;
     uint8_t payload_len;
-    uint8_t payload[256];  // ¼ÙÉè×î´óÔØºÉÎª256×Ö½Ú
+    uint8_t payload[256];  // å‡è®¾æœ€å¤§è½½è·ä¸º256å­—èŠ‚
     uint8_t check_xor;
     uint8_t tail;
 } pis_message_t;
 
-///* ¼ÆËãÒì»òĞ£Ñé */
+///* è®¡ç®—å¼‚æˆ–æ ¡éªŒ */
 //static uint8_t calculate_xor(uint8_t *data, int len)
 //{
 //    uint8_t result = 0;
@@ -52,20 +52,20 @@ typedef struct {
 //    }
 //    return result;
 //}
-/* ´¦ÀíÖØÖÃºô½ĞÇëÇó */
+/* å¤„ç†é‡ç½®å‘¼å«è¯·æ±‚ */
 static void handle_reset_call(uint8_t *payload, uint8_t len)
 {
     if (len != 3) {
-        printf("Çå³ıºô½ĞÊı¾İ³¤¶È´íÎó\n");
+        printf("æ¸…é™¤å‘¼å«æ•°æ®é•¿åº¦é”™è¯¯\n");
         return;
     }
-    printf("´¦ÀíÇå³ıºô½Ğ£º\n");
+    printf("å¤„ç†æ¸…é™¤å‘¼å«ï¼š\n");
     send_reset_call(0x99);
 //    for (int i = 0; i < 3; i++) {
 //        for (int j = 0; j < 8; j++) {
 //            int seat_num = (2-i) * 8 + j + 1;
 //            if (seat_num <= SEAT_COUNT) {
-//                printf("×ùÒÎ%d: %s\n", seat_num, (payload[i] & (1 << j)) ? "±£³Ö" : "¸´Î»");
+//                printf("åº§æ¤…%d: %s\n", seat_num, (payload[i] & (1 << j)) ? "ä¿æŒ" : "å¤ä½");
 //                if ((payload[2-i] & (1 << j)) == 0)
 //                    send_reset_call(seat_num);
 //            }
@@ -73,94 +73,94 @@ static void handle_reset_call(uint8_t *payload, uint8_t len)
 //    }
 }
 
-/* µ÷ÕûÈ«²¿×ùÒÎµ½Ö¸¶¨³µÁ¾ÔËĞĞ·½Ïò */
+/* è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°æŒ‡å®šè½¦è¾†è¿è¡Œæ–¹å‘ */
 static void handle_seat_align_to_direction(uint8_t *payload, uint8_t len)
 {
     if (len != 1) {
-        printf("µ÷Õû×ùÒÎ·½ÏòÊı¾İ³¤¶È´íÎó\n");
+        printf("è°ƒæ•´åº§æ¤…æ–¹å‘æ•°æ®é•¿åº¦é”™è¯¯\n");
         return;
     }
     switch (payload[0]) {
     case 1:
-        printf("µ÷ÕûÈ«²¿×ùÒÎµ½1Î»¶Ë(Ë¾»ú²à)\n");
+        printf("è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°1ä½ç«¯(å¸æœºä¾§)\n");
         send_seat_align_to_direction(1);
         break;
     case 2:
-        printf("µ÷ÕûÈ«²¿×ùÒÎµ½2Î»¶Ë(Ë¾»ú²à)\n");
+        printf("è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°2ä½ç«¯(å¸æœºä¾§)\n");
         send_seat_align_to_direction(2);
         break;
     case 3:
-        printf("µ÷ÕûÈ«²¿×ùÒÎµ½ÏòÇ°\n");
+        printf("è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°å‘å‰\n");
         send_seat_align_to_direction(3);
         break;
     case 4:
-        printf("µ÷ÕûÈ«²¿×ùÒÎµ½Ïòºó\n");
+        printf("è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°å‘å\n");
         send_seat_align_to_direction(4);
         break;
     default:
-        printf("Î´ÖªµÄ×ùÒÎ·½Ïò: %d\n", payload[0]);
+        printf("æœªçŸ¥çš„åº§æ¤…æ–¹å‘: %d\n", payload[0]);
     }
 }
 
-/* ´¦Àí½øÈë»áÒéÄ£Ê½ÇëÇó */
+/* å¤„ç†è¿›å…¥ä¼šè®®æ¨¡å¼è¯·æ±‚ */
 static void handle_seat_into_meeting_mode(uint8_t *payload, uint8_t len)
 {
     if (len != 0) {
-        printf("½øÈë»áÒéÄ£Ê½Êı¾İ³¤¶È´íÎó\n");
+        printf("è¿›å…¥ä¼šè®®æ¨¡å¼æ•°æ®é•¿åº¦é”™è¯¯\n");
         return;
     }
-    printf("µ÷Õû×ùÒÎ½øÈë»áÒéÄ£Ê½\n");
+    printf("è°ƒæ•´åº§æ¤…è¿›å…¥ä¼šè®®æ¨¡å¼\n");
     send_seat_into_meeting_mode();
 }
 
-/* ´¦Àí»á¿ÍÄ£Ê½µ÷ÕûÇëÇó */
+/* å¤„ç†ä¼šå®¢æ¨¡å¼è°ƒæ•´è¯·æ±‚ */
 static void handle_seat_guest_mode_adjustment(uint8_t *payload, uint8_t len)
 {
     if (len != 1) {
-        printf("»á¿ÍÄ£Ê½µ÷ÕûÊı¾İ³¤¶È´íÎó\n");
+        printf("ä¼šå®¢æ¨¡å¼è°ƒæ•´æ•°æ®é•¿åº¦é”™è¯¯\n");
         return;
     }
     send_seat_into_guest_mode(payload[0]);
 }
 
-/* ´¦Àí×ùÒÎĞı×ª¼±Í£ÇëÇó */
+/* å¤„ç†åº§æ¤…æ—‹è½¬æ€¥åœè¯·æ±‚ */
 static void handle_seat_rotation_estop(uint8_t *payload, uint8_t len)
 {
     if (len != 0) {
-        printf("×ùÒÎĞı×ª¼±Í£Êı¾İ³¤¶È´íÎó\n");
+        printf("åº§æ¤…æ—‹è½¬æ€¥åœæ•°æ®é•¿åº¦é”™è¯¯\n");
         return;
     }
-    printf("Ö´ĞĞ×ùÒÎĞı×ª¼±Í£\n");
+    printf("æ‰§è¡Œåº§æ¤…æ—‹è½¬æ€¥åœ\n");
     send_seat_rotation_estop();
 }
 
-/* ´¦Àíµ¥¸ö×ùÒÎÎ»ÖÃÉèÖÃÇëÇó */
+/* å¤„ç†å•ä¸ªåº§æ¤…ä½ç½®è®¾ç½®è¯·æ±‚ */
 static void handle_single_seat_position_set(uint8_t *payload, uint8_t len)
 {
     if (len != 2) {
-        printf("µ¥¸ö×ùÒÎÎ»ÖÃÉèÖÃÊı¾İ³¤¶È´íÎó\n");
+        printf("å•ä¸ªåº§æ¤…ä½ç½®è®¾ç½®æ•°æ®é•¿åº¦é”™è¯¯\n");
         return;
     }
-    printf("ÉèÖÃ×ùÒÎ %d µ½Î»ÖÃ: ", payload[0]);
+    printf("è®¾ç½®åº§æ¤… %d åˆ°ä½ç½®: ", payload[0]);
     send_seat_position_set(payload[0], payload[1]);
 }
 
-/* ´¦Àí·ÕÎ§µÆÉèÖÃÇëÇó */
+/* å¤„ç†æ°›å›´ç¯è®¾ç½®è¯·æ±‚ */
 static void handle_ambient_light_setting(uint8_t *payload, uint8_t len)
 {
-    // TODO Ğ­ÒéÓĞĞ§Êı¾İ³¤¶È£¬Ö»ÓĞÒ»¸ö×Ö½Ú
+    // TODO åè®®æœ‰æ•ˆæ•°æ®é•¿åº¦ï¼Œåªæœ‰ä¸€ä¸ªå­—èŠ‚
 //    if (len != 2) {
-//        printf("·ÕÎ§µÆÉèÖÃÊı¾İ³¤¶È´íÎó\n");
+//        printf("æ°›å›´ç¯è®¾ç½®æ•°æ®é•¿åº¦é”™è¯¯\n");
 //        return;
 //    }
-//    printf("ÉèÖÃ·ÕÎ§µÆ\n");
+//    printf("è®¾ç½®æ°›å›´ç¯\n");
     send_ambient_light_setting(0x99, payload[0]);
 }
 
-/* ´¦ÀíPISÊı¾İµÄÖ÷º¯Êı */
+/* å¤„ç†PISæ•°æ®çš„ä¸»å‡½æ•° */
 void process_pis_data(uint8_t *data, uint16_t len)
 {
-    /* ¼ì²éÊı¾İÖ¡µÄ»ù±¾ÓĞĞ§ĞÔ */
+    /* æ£€æŸ¥æ•°æ®å¸§çš„åŸºæœ¬æœ‰æ•ˆæ€§ */
     if (len < 12 || data[0] != FRAME_HEADER_1 || data[1] != FRAME_HEADER_2 || data[len - 1] != FRAME_TAIL) {
         printf("Invalid data frame\n");
         return;
@@ -168,7 +168,7 @@ void process_pis_data(uint8_t *data, uint16_t len)
 
     pis_message_t msg;
 
-    /* ½âÎö±¨ÎÄ½á¹¹ */
+    /* è§£ææŠ¥æ–‡ç»“æ„ */
     msg.stx1 = data[0];
     msg.stx2 = data[1];
     memcpy(msg.src, &data[2], 2);
@@ -181,59 +181,59 @@ void process_pis_data(uint8_t *data, uint16_t len)
     msg.check_xor = data[len - 2];
     msg.tail = data[len - 1];
 
-    /* ´òÓ¡±¨ÎÄĞÅÏ¢ */
+    /* æ‰“å°æŠ¥æ–‡ä¿¡æ¯ */
     printf("Source address: %d.%d\n", msg.src[0], msg.src[1]);
     printf("Destination address: %d.%d\n", msg.dst[0], msg.dst[1]);
     printf("Function code: 0x%02X\n", msg.fun);
     printf("Payload length: %d\n", msg.payload_len);
     printf("Check value: 0x%02X\n", msg.check_xor);
 
-    /* ÑéÖ¤Òì»òĞ£Ñé */
+    /* éªŒè¯å¼‚æˆ–æ ¡éªŒ */
 //    uint8_t calculated_xor = calculate_xor(data, len - 2);
 //    if (calculated_xor != msg.check_xor) {
 //        printf("XOR check error, calculated value: 0x%02X, received value: 0x%02X\n", calculated_xor, msg.check_xor);
 //        return;
 //    }
 
-    /* ¸ù¾İ¹¦ÄÜÂëµ÷ÓÃÏàÓ¦µÄ´¦Àíº¯Êı */
+    /* æ ¹æ®åŠŸèƒ½ç è°ƒç”¨ç›¸åº”çš„å¤„ç†å‡½æ•° */
     switch (msg.fun) {
-    case REQ_RESET_CALL://ÇëÇó¸´Î»ºô½Ğ
+    case REQ_RESET_CALL://è¯·æ±‚å¤ä½å‘¼å«
         handle_reset_call(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_ALIGN_TO_DIRECTION://µ÷ÕûÈ«²¿×ùÒÎµ½Ö¸¶¨³µÁ¾ÔËĞĞ·½Ïò
+    case REQ_SEAT_ALIGN_TO_DIRECTION://è°ƒæ•´å…¨éƒ¨åº§æ¤…åˆ°æŒ‡å®šè½¦è¾†è¿è¡Œæ–¹å‘
         handle_seat_align_to_direction(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_INTO_MEETING_MODE://ÇëÇó½øÈë»áÒéÄ£Ê½
+    case REQ_SEAT_INTO_MEETING_MODE://è¯·æ±‚è¿›å…¥ä¼šè®®æ¨¡å¼
         handle_seat_into_meeting_mode(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_GUEST_MODE_ADJUSTMENT://ÇëÇó»á¿ÍÄ£Ê½µ÷Õû
+    case REQ_SEAT_GUEST_MODE_ADJUSTMENT://è¯·æ±‚ä¼šå®¢æ¨¡å¼è°ƒæ•´
         handle_seat_guest_mode_adjustment(msg.payload, msg.payload_len);
         break;
-    case REQ_SEAT_ROTATION_ESTOP://ÇëÇó×ùÒÎĞı×ª¼±Í£
+    case REQ_SEAT_ROTATION_ESTOP://è¯·æ±‚åº§æ¤…æ—‹è½¬æ€¥åœ
         handle_seat_rotation_estop(msg.payload, msg.payload_len);
         break;
-    case REQ_SINGLE_SEAT_POSITION_SET://ÇëÇóµ¥¸ö×ùÒÎÎ»ÖÃÉèÖÃ
+    case REQ_SINGLE_SEAT_POSITION_SET://è¯·æ±‚å•ä¸ªåº§æ¤…ä½ç½®è®¾ç½®
         handle_single_seat_position_set(msg.payload, msg.payload_len);
         break;
-    case REQ_AMBIENT_LIGHT_SETTING://ÇëÇó·ÕÎ§µÆÉèÖÃ
+    case REQ_AMBIENT_LIGHT_SETTING://è¯·æ±‚æ°›å›´ç¯è®¾ç½®
         handle_ambient_light_setting(msg.payload, msg.payload_len);
         break;
     default:
-        printf("Î´ÖªµÄ¹¦ÄÜÂë: 0x%02X\n", msg.fun);
+        printf("æœªçŸ¥çš„åŠŸèƒ½ç : 0x%02X\n", msg.fun);
         break;
     }
 }
 
 void send_data_to_pis(uint8_t function, uint8_t *payload, uint16_t payload_len)
 {
-    uint8_t data[256]; // ¼ÙÉè×î´óÊı¾İ³¤¶ÈÎª256×Ö½Ú
+    uint8_t data[256]; // å‡è®¾æœ€å¤§æ•°æ®é•¿åº¦ä¸º256å­—èŠ‚
     uint16_t len = 0;
 
-    // ¹¹½¨±¨ÎÄÍ·
-    data[len++] = FRAME_HEADER_1; // ÆğÊ¼×Ö½Ú
+    // æ„å»ºæŠ¥æ–‡å¤´
+    data[len++] = FRAME_HEADER_1; // èµ·å§‹å­—èŠ‚
     data[len++] = FRAME_HEADER_2;
 
-    // Ô´µØÖ·£¨¸ù¾İg_total_controller_addressÈ·¶¨£©
+    // æºåœ°å€ï¼ˆæ ¹æ®g_total_controller_addressç¡®å®šï¼‰
     if (g_total_controller_address == 1) {
         data[len++] = 0x51;
         data[len++] = 0x34;
@@ -242,40 +242,40 @@ void send_data_to_pis(uint8_t function, uint8_t *payload, uint16_t payload_len)
         data[len++] = 0x34;
     }
 
-    // ±êÊ¶S1
+    // æ ‡è¯†S1
     data[len++] = 0x01;
 
-    // Ä¿±êµØÖ·£¨0.55£©
+    // ç›®æ ‡åœ°å€ï¼ˆ0.55ï¼‰
     data[len++] = 0x00;
     data[len++] = 0x37;
 
-    // ±êÊ¶S2
+    // æ ‡è¯†S2
     data[len++] = 0x00;
 
-    // ¹¦ÄÜÂë£¨¼ÙÉèÎª0x81£¬±íÊ¾ÏìÓ¦£©
-    data[len++] = function; // TODO ¸ü¸Ä
+    // åŠŸèƒ½ç ï¼ˆå‡è®¾ä¸º0x81ï¼Œè¡¨ç¤ºå“åº”ï¼‰
+    data[len++] = function; // TODO æ›´æ”¹
 
-    // Ìí¼Ópayload³¤¶È
+    // æ·»åŠ payloadé•¿åº¦
     data[len++] = payload_len;
 
-    // Ìí¼ÓpayloadÊı¾İ
+    // æ·»åŠ payloadæ•°æ®
     memcpy(&data[len], payload, payload_len);
     len += payload_len;
 
-    // ¼ÆËã²¢Ìí¼ÓÒì»òĞ£Ñé
+    // è®¡ç®—å¹¶æ·»åŠ å¼‚æˆ–æ ¡éªŒ
     uint8_t xor_check = 0;
     for (int i = 0; i < len; i++) {
         xor_check ^= data[i];
     }
     data[len++] = xor_check;
 
-    // Ìí¼Ó½áÊø×Ö½Ú
+    // æ·»åŠ ç»“æŸå­—èŠ‚
     data[len++] = FRAME_TAIL;
 
-    // ·¢ËÍÊı¾İ
+    // å‘é€æ•°æ®
     app_udp_send_data(data, len);
 
-    printf("ÏòPIS·¢ËÍÁË%d×Ö½ÚÊı¾İ\n", len);
+    printf("å‘PISå‘é€äº†%då­—èŠ‚æ•°æ®\n", len);
 }
 
 

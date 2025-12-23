@@ -120,5 +120,5 @@ int fgetc(FILE *f)
 //    int ch;
 //    HAL_UART_Receive(&huart1, (uint8_t *)&ch, 1, 1000);
 //    return (ch);
-  return 0;
+    return 0;
 }
