@@ -1,30 +1,38 @@
 总控制器实现方案
 
 座椅旋转位置定义
-    单个座椅旋转
-        -面向前
-        -面向后
-        -面向过道
-        -一位端
-        -二位端
-    全部座椅旋转
-        G_SEAT_1WEIDUAN = 0X40,//一位端
-        G_SEAT_2WEIDUAN = 0X41,//二位端
-        G_SEAT_ZHENGQIAN = 0X42,//正前
-        G_SEAT_ZHENGHOU = 0X43,//正后
-    会议模式
-        -六人会议
-    两人会客
-        G_SEAT_NUM_1A_2A = 0X00,//二人
-        G_SEAT_NUM_2A_3A = 0X01,//二人
-        G_SEAT_NUM_1F_2F = 0X10,//二人
-        G_SEAT_NUM_2F_3F = 0X11,//二人
-        G_SEAT_NUM_1A_1F = 0X20,//二人
-        G_SEAT_NUM_2A_2F = 0X21,//二人
-        G_SEAT_NUM_3A_3F = 0X22,//二人
-    四人会客
-        G_SEAT_NUM_1A_2A_1F_2F = 0X30,//四人
-        G_SEAT_NUM_2A_3A_2F_3F = 0X31,//四人
+
+typedef enum {
+    /* 单个座椅旋转方向 */
+    G_SEAT_ZHENGQIAN  = 0x50,  // 面向前
+    G_SEAT_ZHENGHOU   = 0x51,  // 面向后
+    G_SEAT_GUODAO     = 0x52,  // 面向过道
+    G_SEAT_1WEIDUAN   = 0x53,  // 面向一位端
+    G_SEAT_2WEIDUAN   = 0x54,  // 面向二位端
+
+    /* 全部座椅旋转 */
+    G_SEAT_ALL_1WEIDUAN   = 0x40,  // 一位端
+    G_SEAT_ALL_2WEIDUAN   = 0x41,  // 二位端
+    G_SEAT_ALL_ZHENGQIAN  = 0x42,  // 正前
+    G_SEAT_ALL_ZHENGHOU   = 0x43,  // 正后
+
+    /* 会议模式 */
+    G_SEAT_MEETING_6REN   = 0x80,  // 六人会议
+
+    /* 两人会客 */
+    G_SEAT_NUM_1A_2A      = 0x00,
+    G_SEAT_NUM_2A_3A      = 0x01,
+    G_SEAT_NUM_1F_2F      = 0x10,
+    G_SEAT_NUM_2F_3F      = 0x11,
+    G_SEAT_NUM_1A_1F      = 0x20,
+    G_SEAT_NUM_2A_2F      = 0x21,
+    G_SEAT_NUM_3A_3F      = 0x22,
+
+    /* 四人会客 */
+    G_SEAT_NUM_1A_2A_1F_2F = 0x30,
+    G_SEAT_NUM_2A_3A_2F_3F = 0x31,
+
+} G_SEAT_ROTATE_CMD_T;
 
 
 
