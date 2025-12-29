@@ -1,50 +1,63 @@
 /*
- * @Author: XingNian j_xingnian@163.com
- * @Date: 2024-09-09 10:10:59
- * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-10-28 16:15:41
- * @FilePath: \total_controller\User\app\app.c
- * @Description:
- *
- * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
+ * @Author: æ˜Ÿå¹´ && j_xingnian@163.com
+ * @Date: 2025-12-29 11:26:09
+ * @LastEditors: xingnian j_xingnian@163.com
+ * @LastEditTime: 2025-12-29 13:02:49
+ * @FilePath: \goodmind-xinlongsheng450-total\User\app\app.c
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
 /**
  * @file app.c
- * @author zhaochunyun (CY.Zhao2020@outlook.com)
- * @brief
- * @version 0.1
- * @date 2024-04-20
- *
- * @copyright (c) 2024 Goodmind.
- *
+ * @brief æ€»æ§åˆ¶å™¨åº”ç”¨å±‚ä¸»æ–‡ä»¶
  */
 #include "app.h"
 #include "hmi_driver.h"
 #include "hmi_user_uart.h"
 #include "bsp_hmi.h"
 
-static tmr_t tmr_timeout_d5s;
-
-static void start_timeout_timer(void); // Æô¶¯²âÊÔ¶¨Ê±Æ÷
+static tmr_t tmr_heartbeat;
 
 static int bsp_init(void)
 {
     return 0;
 }
 
+static void tmr_heartbeat_cb(int timer_id, void *data)
+{
+    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+    
+    // è¯»å–BCDæ‹¨ç å¼€å…³åœ°å€(ä½ç”µå¹³æœ‰æ•ˆ)
+    uint8_t pb5 = !HAL_GPIO_ReadPin(BCD_4_GPIO_Port, BCD_4_Pin);
+    uint8_t pb4 = !HAL_GPIO_ReadPin(BCD_3_GPIO_Port, BCD_3_Pin);
+    uint8_t pb3 = !HAL_GPIO_ReadPin(BCD_2_GPIO_Port, BCD_2_Pin);
+    uint8_t pd2 = !HAL_GPIO_ReadPin(BCD_1_GPIO_Port, BCD_1_Pin);
+    
+    uint8_t bcd_val = (pb5 << 3) | (pb4 << 2) | (pb3 << 1) | pd2;
+    if (bcd_val <= 9) {
+        g_device_addr = bcd_val;
+    }
+}
+
 static int app_init(void)
 {
-    log_info("\r\nFirmware name: %s \r\n", FW_NAME);
-    log_info("version: %d.%d.%d \r\n", FW_VERSION_MAJOR, FW_VERSION_MINOR, FW_VERSION_patch);
+    log_info("\r\nFirmware: %s v%d.%d.%d\r\n", FW_NAME, FW_VERSION_MAJOR, FW_VERSION_MINOR, FW_VERSION_PATCH);
 
-    start_timeout_timer();
+    // å¯åŠ¨å¿ƒè·³å®šæ—¶å™¨
+    start_rpt_tmr(&tmr_heartbeat, tmr_heartbeat_cb, MS_TO_TICKS(500));
 
+    // ä¸²å£åˆå§‹åŒ–
     uart_spec_init();
     bsp_uart_start_recv_all();
 
+    // å¤§å½©å±åˆå§‹åŒ–
     start_dacai_uart_handle();
 
+    // UDPåˆå§‹åŒ–
     app_udp_init();
+
+    // ä¸šåŠ¡é€»è¾‘åˆå§‹åŒ–
     logic_proc_init();
 
     return 0;
@@ -53,40 +66,8 @@ static int app_init(void)
 et_prod_init_func_t et_prod_init_tbl[] = {
     bsp_init,
     app_init,
-    NULL,     /* !! NULL MUST be here as a sentinal  */
+    NULL,
 };
 
-// ÉùÃ÷×Ü¿ØµØÖ·±äÁ¿
-uint8_t g_total_controller_address = 0;
-
-/*Ñ­»·¶¨Ê±Æ÷*/
-static void tmr_timeout_d5s_loop(int timer_id, void *data)
-{
-    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-    // »ñÈ¡±àÂëÆ÷µÄÖµ
-    volatile static uint8_t encoder_value = 0;
-
-    // ¶ÁÈ¡PB5¡¢PB4¡¢PB3¡¢PD2µÄ×´Ì¬£¨µÍµçÆ½ÓĞĞ§£©
-    volatile uint8_t pb5 = !HAL_GPIO_ReadPin(BCD_4_GPIO_Port, BCD_4_Pin);
-    volatile uint8_t pb4 = !HAL_GPIO_ReadPin(BCD_3_GPIO_Port, BCD_3_Pin);
-    volatile uint8_t pb3 = !HAL_GPIO_ReadPin(BCD_2_GPIO_Port, BCD_2_Pin);
-    volatile uint8_t pd2 = !HAL_GPIO_ReadPin(BCD_1_GPIO_Port, BCD_1_Pin);
-
-    // ½«ËÄ¸öÒı½ÅµÄ×´Ì¬×éºÏ³ÉÒ»¸ö4Î»µÄBCDÂë£¨8421Âë£©
-    encoder_value = (pb5 << 3) | (pb4 << 2) | (pb3 << 1) | pd2;
-
-    // BCDÂë×ª»»ÎªÊ®½øÖÆ
-    if (encoder_value <= 9) {
-        g_total_controller_address = encoder_value;
-    } else {
-        g_total_controller_address = 0; // Èç¹ûÊÇÎŞĞ§µÄBCDÂë£¬ÉèÖÃÎªÄ¬ÈÏÖµ0
-    }
-    log_info("×Ü¿ØµØÖ·: %d\r\n", g_total_controller_address);
-}
-
-static void start_timeout_timer(void)
-{
-    start_rpt_tmr(&tmr_timeout_d5s, tmr_timeout_d5s_loop, MS_TO_TICKS(500));
-}
-
-
+// è®¾å¤‡åœ°å€(BCDæ‹¨ç )
+uint8_t g_device_addr = 0;

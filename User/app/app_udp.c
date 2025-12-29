@@ -1,131 +1,81 @@
 /*
- * @Author: XingNian j_xingnian@163.com
- * @Date: 2024-09-09 12:19:27
- * @LastEditors: XingNian j_xingnian@163.com
- * @LastEditTime: 2024-09-12 09:55:47
- * @FilePath: \Projectc:\XingNian\XiangMu\450TongXing\CODE\TotalController\total_controller\User\app\app_udp.c
- * @Description: W5500 UDPÍ¨ĞÅÊµÏÖ£¬°üÀ¨×é²¥¹¦ÄÜ
- *
- * Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
+ * @Author: æ˜Ÿå¹´ && j_xingnian@163.com
+ * @Date: 2025-12-29 11:26:09
+ * @LastEditors: xingnian j_xingnian@163.com
+ * @LastEditTime: 2025-12-29 13:08:37
+ * @FilePath: \goodmind-xinlongsheng450-total\User\app\app_udp.c
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
  */
-
-/* °üº¬±ØÒªµÄÍ·ÎÄ¼ş */
-#include "main.h"
+/**
+ * @file app_udp.c
+ * @brief W5500 UDPé€šè®¯
+ */
 #include "app_udp.h"
-#include "et_os.h"
 #include "et_timer.h"
-#include "spi.h"
 #include "w5500.h"
 #include "socket.h"
-#include "app_pis_proc.h"
-/* ¶¨Òå³£Á¿ */
+#include "device.h"
+
 static tmr_t tmr_udp_process;
-extern uint8 txsize[];          /* ÒıÓÃÍâ²¿±äÁ¿£¬ÉùÃ÷Socket·¢ËÍ»º´æ´óĞ¡ */
-extern uint8 rxsize[];          /* ÒıÓÃÍâ²¿±äÁ¿£¬ÉùÃ÷Socket½ÓÊÕ»º´æ´óĞ¡ */
-uint8 buffer[2048];             /* ¶¨ÒåÒ»¸ö2KBµÄÊı×é£¬ÓÃÀ´´æ·ÅSocketµÄÍ¨ĞÅÊı¾İ */
-uint8 remote_ip[4];             /* ÅäÖÃÔ¶³ÌIPµØÖ· */
-uint16 remote_port;             /* ÅäÖÃÔ¶³Ì¶Ë¿Ú */
-uint16 len = 0;
 
-uint8 DIP[4] = {225, 0, 0, 55};
-uint8 DHAR[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x37};
-uint8 LDIP[4] = {225, 0, 0, 55};
-uint8 LDHAR[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x37};
-//uint16 DPORT = 8002;
+// ç»„æ’­é…ç½®
+static uint8_t multicast_ip[4] = {225, 0, 0, 55};
+static uint8_t multicast_mac[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x37};
+static uint16_t local_port = 8002;
+static uint16_t remote_port = 8003;
 
+static uint8_t recv_buf[512];
 
-/* UDP´¦ÀíÑ­»·º¯Êı */
-static void tmr_udp_process_loop(int timer_id, void *data)
+static void udp_process_cb(int timer_id, void *data)
 {
-
-    switch (getSn_SR(0)) {                                                                                  // »ñÈ¡socket0µÄ×´Ì¬
-    case SOCK_UDP:                                                                                          // Socket´¦ÓÚ³õÊ¼»¯Íê³É(´ò¿ª)×´Ì¬                                                                        // Socket´¦ÓÚ³õÊ¼»¯Íê³É(´ò¿ª)×´Ì¬
-        if (getSn_IR(1) & Sn_IR_RECV) {
-            setSn_IR(1, Sn_IR_RECV);                                                            // Sn_IRµÄRECVÎ»ÖÃ1
+    uint16_t len = 0;
+    uint8_t remote_ip[4];
+    uint16_t port;
+    
+    switch (getSn_SR(0)) {
+    case SOCK_UDP:
+        if (getSn_IR(0) & Sn_IR_RECV) {
+            setSn_IR(0, Sn_IR_RECV);
         }
-        if ((len = getSn_RX_RSR(1)) > 0) {
-            len -= 8;
-            recvfrom(1, buffer, len, remote_ip, &remote_port);          // W5500½ÓÊÕÀ´×ÔÔ¶³ÌÉÏÎ»»úµÄÊı¾İ£¬²¢Í¨¹ıSPI·¢ËÍ¸øMCU
-            process_pis_data(buffer, len);  //´¦Àí½ÓÊÕµ½µÄÊı¾İ
+        if ((len = getSn_RX_RSR(0)) > 0) {
+            len = recvfrom(0, recv_buf, len, remote_ip, &port);
+            // TODO: å¤„ç†æ¥æ”¶åˆ°çš„PISæ•°æ®
+            // pis_proc_recv(recv_buf, len);
         }
         break;
-    case SOCK_CLOSED:                                                                                       // Socket´¦ÓÚ¹Ø±Õ×´Ì¬
-//        // ·¢ËÍ
-//        setDIPR(0, DIP);
-//        setDHAR(0, DHAR);
-//        setDPORT(0, 8002);
-//              uint8_t mode = 0x82;
-//              mode |= (1 << 5);
-//              IINCHIP_WRITE(Sn_MR(0), mode);
-//              socket(0, mode, 8002, 0);                   /*³õÊ¼»¯socket 0µÄÌ×½Ó×Ö*/
-//
-//        // ½ÓÊÕ
-//              setDIPR(1, LDIP);
-//        setDHAR(1, LDHAR);
-//        setDPORT(1, 8003);
-//              IINCHIP_WRITE(Sn_MR(1), mode);
-//              socket(1, mode, 8003, 0);                   /*³õÊ¼»¯socket 1µÄÌ×½Ó×Ö*/
-//
+        
+    case SOCK_CLOSED:
+        // é‡æ–°åˆå§‹åŒ–socket
+        app_udp_init();
         break;
     }
 }
 
-/* Æô¶¯UDP¶¨Ê±Æ÷ */
-static void start_udp_timer(void)
-{
-    start_rpt_tmr(&tmr_udp_process, tmr_udp_process_loop, MS_TO_TICKS(100));
-}
-
-// ·¢ËÍ 8002
-// ½ÓÊÕ 8003
-/* UDP³õÊ¼»¯º¯Êı */
 void app_udp_init(void)
 {
     Reset_W5500();
-    // Æô¶¯UDP¶¨Ê±Æ÷
-    /***** W5500µÄIPĞÅÏ¢³õÊ¼»¯ *****/
-    set_default();                       // ÉèÖÃÄ¬ÈÏMAC¡¢IP¡¢GW¡¢SUB¡¢DNS
+    set_default();
     set_network();
-
-    // ·¢ËÍ
-    setDIPR(0, DIP);
-    setDHAR(0, DHAR);
-    setDPORT(0, 8002);
-    uint8_t mode = 0x82;
-    mode |= (1 << 5);
+    
+    // é…ç½®ç»„æ’­
+    setDIPR(0, multicast_ip);
+    setDHAR(0, multicast_mac);
+    setDPORT(0, remote_port);
+    
+    uint8_t mode = Sn_MR_UDP | Sn_MR_MULTI;
     IINCHIP_WRITE(Sn_MR(0), mode);
-    socket(0, mode, 8002, 0);                   /*³õÊ¼»¯socket 0µÄÌ×½Ó×Ö*/
-
-    // ½ÓÊÕ
-    setDIPR(1, LDIP);
-    setDHAR(1, LDHAR);
-    setDPORT(1, 8003);
-    IINCHIP_WRITE(Sn_MR(1), mode);
-    socket(1, mode, 8003, 0);                   /*³õÊ¼»¯socket 1µÄÌ×½Ó×Ö*/
-
-
-    start_udp_timer();
+    socket(0, mode, local_port, 0);
+    
+    // å¯åŠ¨UDPå¤„ç†å®šæ—¶å™¨
+    start_rpt_tmr(&tmr_udp_process, udp_process_cb, MS_TO_TICKS(50));
 }
 
-void app_udp_send_data(uint8_t *data, uint16_t len)
+void app_udp_send(uint8_t *data, uint16_t len)
 {
-    if (data == NULL || len == 0) {
-        printf("·¢ËÍÊı¾İÎŞĞ§\r\n");
-        return;
-    }
-
-    // È·±£socket´¦ÓÚUDPÄ£Ê½
-    if (getSn_SR(0) != SOCK_UDP) {
-        printf("SocketÎ´´¦ÓÚUDPÄ£Ê½\r\n");
-        return;
-    }
-
-    // ·¢ËÍÊı¾İ
-    int32_t result = sendto(0, data, len, DIP, 8002);
-
-    if (result == len) {
-        printf("³É¹¦ÏòPIS·¢ËÍ%d×Ö½ÚÊı¾İ\r\n", len);
-    } else {
-        printf("ÏòPIS·¢ËÍÊı¾İÊ§°Ü£¬´íÎó´úÂë£º%d\r\n", result);
-    }
+    if (data == NULL || len == 0) return;
+    if (getSn_SR(0) != SOCK_UDP) return;
+    
+    sendto(0, data, len, multicast_ip, remote_port);
 }

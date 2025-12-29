@@ -1,61 +1,31 @@
 /**
- *******************************************************************************
- * @file    uart_spec.h
- * @author
- * @version
- * @date    2022-11-02
- * @brief
- *
- *
- *******************************************************************************
- * @attention
- *
- *
- *******************************************************************************
+ * @file uart_spec.h
+ * @brief 串口发送队列管理
  */
+#ifndef __UART_SPEC_H__
+#define __UART_SPEC_H__
 
-/*******************************************************************************
- ********************* define to prevent recursive inclusion *******************
- ******************************************************************************/
-#ifndef __UART_SPEC__
-#define __UART_SPEC__
-
-/*******************************************************************************
- ********************************* include files *******************************
- ******************************************************************************/
-#include <stdio.h>
-#include "et_timer.h"
+#include <stdint.h>
+#include "et_os.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*******************************************************************************
- ************************ exported macros and struct types *********************
- ******************************************************************************/
+// LEFT_CTRL_UART 和 RIGHT_CTRL_UART 定义在 et_os.h 中
+
 typedef struct {
     uint8_t uc_data_len;
     uint8_t uca_data[64];
 } uart_send_data_t;
 
-/*******************************************************************************
- ******************************* exported functions ****************************
- ******************************************************************************/
-extern void uart_spec_init(void);
-extern void uart_apec_send_data(int opcode, const uint8_t *payload_data, uint8_t payload_len);
+void uart_spec_init(void);
 int32_t push_uart_send_data(int uart_id, uart_send_data_t *data);
 int tmr_uart_send_rb_timeout(int timer_id, void *data);
-
-/*******************************************************************************
- ***************************  exported global variables ************************
- ******************************************************************************/
+void uart_apec_send_data(int uart_id, const uint8_t *payload_data, uint8_t payload_len);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __UART_SPEC__ */
-
-/********************************* end of file ********************************/
-
-
+#endif

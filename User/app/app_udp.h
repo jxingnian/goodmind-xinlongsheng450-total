@@ -1,10 +1,21 @@
-#ifndef _APP_UDP_H__
-#define _APP_UDP_H__
+/**
+ * @file app_udp.h
+ * @brief W5500 UDP通讯
+ */
+#ifndef _APP_UDP_H_
+#define _APP_UDP_H_
 
+#include <stdint.h>
 
-void platform_init(void);                               // initialize the dependent host peripheral
-void network_init(void);                                // Initialize Network information and display it
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void app_udp_init(void);
-void app_udp_send_data(uint8_t *data, uint16_t len);
+void app_udp_send(uint8_t *data, uint16_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
