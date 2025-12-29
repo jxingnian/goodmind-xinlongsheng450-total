@@ -80,8 +80,8 @@ static void send_to_side_cabinet(uint8_t addr, uint8_t cmd, uint8_t reg, uint8_t
 void send_seat_rotation_estop(void)
 {
     uint8_t data[4] = {0};
-    send_to_side_cabinet(0x99, CMD_WRITE, 0x07, data, 4);
-    log_info("座椅急停\r\n");
+    send_to_side_cabinet(0x99, CMD_WRITE, REG_SEAT_ESTOP, data, 4);
+    log_info("Seat ESTOP\r\n");
 }
 
 // 全部座椅朝向

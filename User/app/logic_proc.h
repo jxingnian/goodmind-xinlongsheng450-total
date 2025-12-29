@@ -25,6 +25,7 @@ extern "C" {
 #define REG_SEAT_RESET       0x31  // 座椅复位
 #define REG_CALL_CLEAR       0x32  // 清除呼叫
 #define REG_LIGHT_CTRL       0x33  // 控制氛围灯
+#define REG_SEAT_ESTOP       0x34  // 座椅急停
 
 /* 初始化 */
 void logic_proc_init(void);
