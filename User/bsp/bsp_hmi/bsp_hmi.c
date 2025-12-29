@@ -1,3 +1,13 @@
+/*
+ * @Author: æ˜Ÿå¹´ && j_xingnian@163.com
+ * @Date: 2025-12-29 11:26:09
+ * @LastEditors: xingnian j_xingnian@163.com
+ * @LastEditTime: 2025-12-29 11:32:11
+ * @FilePath: \goodmind-xinlongsheng450-total\User\bsp\bsp_hmi\bsp_hmi.c
+ * @Description: 
+ * 
+ * Copyright (c) 2025 by ${git_name_email}, All Rights Reserved. 
+ */
 #include "main.h"
 #include "et_timer.h"
 #include "bsp_hmi.h"
@@ -13,33 +23,33 @@ static void NotifyProgress(uint16 screen_id, uint16 control_id, uint32 value);
 static void NotifyScreen(uint16 screen_id);
 
 //const char *seat_dir[] = {
-//    "Ò»Î»¶Ë",
-//    "¶şÎ»¶Ë"
+//    "ä¸€ä½ç«¯",
+//    "äºŒä½ç«¯"
 //};
 
 static tmr_t tmr_dacai_handle;
 // static uint16_t s_ul_hmi_cur_screen_id = 0;
 
-//´ó²ÊÊı¾İ´¦Àí
+//å¤§å½©æ•°æ®å¤„ç†
 static void tmr_dacai_handle_callback(int timer_id, void *data)
 {
     static uint32_t time_count = 0;
 //    uint8_t  dacai_send_buff[50];
     uint8_t  dacai_cmd_buffer[64];
 
-    qsize size = queue_find_cmd(dacai_cmd_buffer, CMD_MAX_SIZE); // ´Ó»º³åÇøÖĞ»ñÈ¡Ò»ÌõÖ¸Áî
+    qsize size = queue_find_cmd(dacai_cmd_buffer, CMD_MAX_SIZE); // ä»ç¼“å†²åŒºä¸­è·å–ä¸€æ¡æŒ‡ä»¤
     if (size > 0 && dacai_cmd_buffer[1] != 0x07) {
-        dacai_process_message((PCTRL_MSG) dacai_cmd_buffer, size); // Ö¸Áî´¦Àí
-    } else if (size > 0 && dacai_cmd_buffer[1] == 0x07) { // ²åÈëÆÁÄ»
+        dacai_process_message((PCTRL_MSG) dacai_cmd_buffer, size); // æŒ‡ä»¤å¤„ç†
+    } else if (size > 0 && dacai_cmd_buffer[1] == 0x07) { // æ’å…¥å±å¹•
         ;
     }
 
-    /* 200ms¸üĞÂ */
+    /* 200msæ›´æ–° */
     if (time_count % 20 == 0) {
         ;
     }
 
-    /* 1s ¸üĞÂ */
+    /* 1s æ›´æ–° */
     if (time_count % 100 == 0) {
         ;
     }
@@ -47,44 +57,44 @@ static void tmr_dacai_handle_callback(int timer_id, void *data)
     time_count++;
 }
 
-//Æô¶¯´ó²ÊÊı¾İ´¦Àí¶¨Ê±Æ÷
+//å¯åŠ¨å¤§å½©æ•°æ®å¤„ç†å®šæ—¶å™¨
 void start_dacai_uart_handle(void)
 {
     start_rpt_tmr(&tmr_dacai_handle, tmr_dacai_handle_callback, MS_TO_TICKS(10));
 }
 
-//ÆÁÄ»°´Å¥»Øµ÷
+//å±å¹•æŒ‰é’®å›è°ƒ
 static void dacai_notify_button(uint16 screen_id, uint16 control_id, uint8 state)
 {
-    if (screen_id == 0) { //»­Ãæ0
-        if (state == 0) {  // Ì§Æğ
+    if (screen_id == 0) { //ç”»é¢0
+        if (state == 0) {  // æŠ¬èµ·
             return;
         }
-    } else if (screen_id == 1) { //»­Ãæ1 Ö÷½çÃæ
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 1) { //ç”»é¢1 ä¸»ç•Œé¢
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
-        case 2: /* ¼±Í£ */
+        case 2: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
-        case 4: /* ³¯ÏòÒ»Î»¶Ë */
+        case 4: /* æœå‘ä¸€ä½ç«¯ */
             send_seat_align_to_direction(1);
             break;
 
-        case 5: /* ³¯Ïò¶şÎ»¶Ë */
+        case 5: /* æœå‘äºŒä½ç«¯ */
             send_seat_align_to_direction(2);
             break;
 
-        case 7: /* »áÒéÄ£Ê½ */
+        case 7: /* ä¼šè®®æ¨¡å¼ */
             send_seat_into_meeting_mode();
             break;
 
         default:
             break;
         }
-    } else if (screen_id == 2) { //»­Ãæ2 »á¿ÍÄ£Ê½µ÷Õû
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 2) { //ç”»é¢2 ä¼šå®¢æ¨¡å¼è°ƒæ•´
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
         case 1: /* 1F/2F */
@@ -123,193 +133,193 @@ static void dacai_notify_button(uint16 screen_id, uint16 control_id, uint8 state
             send_seat_into_guest_mode(0x31);
             break;
 
-        case 10: /* ¼±Í£ */
+        case 10: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
         default:
             break;
         }
-    } else if (screen_id == 3) { //»­Ãæ3 1A×ùÒÎµ¥¶Àµ÷Õû
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 3) { //ç”»é¢3 1Aåº§æ¤…å•ç‹¬è°ƒæ•´
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
-        case 3: /* ¼±Í£ */
+        case 3: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
-        case 5: /* Ò»Î»¶Ë */
+        case 5: /* ä¸€ä½ç«¯ */
             send_seat_position_set(1, 3);
             break;
 
-        case 7: /* Ç°»á¿Í */
+        case 7: /* å‰ä¼šå®¢ */
             send_seat_position_set(1, 0);
             break;
 
-        case 9: /* ¹ıµÀ */
+        case 9: /* è¿‡é“ */
             send_seat_position_set(1, 2);
             break;
 
-        case 8: /* ºó»á¿Í */
+        case 8: /* åä¼šå®¢ */
             send_seat_position_set(1, 1);
             break;
 
-        case 6: /* ¶şÎ»¶Ë */
+        case 6: /* äºŒä½ç«¯ */
             send_seat_position_set(1, 4);
             break;
 
         default:
             break;
         }
-    } else if (screen_id == 4) { //»­Ãæ4 1F×ùÒÎµ¥¶Àµ÷Õû
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 4) { //ç”»é¢4 1Fåº§æ¤…å•ç‹¬è°ƒæ•´
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
-        case 3: /* ¼±Í£ */
+        case 3: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
-        case 5: /* Ò»Î»¶Ë */
+        case 5: /* ä¸€ä½ç«¯ */
             send_seat_position_set(2, 3);
             break;
 
-        case 7: /* Ç°»á¿Í */
+        case 7: /* å‰ä¼šå®¢ */
             send_seat_position_set(2, 0);
             break;
 
-        case 9: /* ¹ıµÀ */
+        case 9: /* è¿‡é“ */
             send_seat_position_set(2, 2);
             break;
 
-        case 8: /* ºó»á¿Í */
+        case 8: /* åä¼šå®¢ */
             send_seat_position_set(2, 1);
             break;
 
-        case 6: /* ¶şÎ»¶Ë */
+        case 6: /* äºŒä½ç«¯ */
             send_seat_position_set(2, 4);
             break;
 
         default:
             break;
         }
-    } else if (screen_id == 5) { //»­Ãæ5 2A×ùÒÎµ¥¶Àµ÷Õû
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 5) { //ç”»é¢5 2Aåº§æ¤…å•ç‹¬è°ƒæ•´
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
-        case 3: /* ¼±Í£ */
+        case 3: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
-        case 5: /* Ò»Î»¶Ë */
+        case 5: /* ä¸€ä½ç«¯ */
             send_seat_position_set(3, 3);
             break;
 
-        case 7: /* Ç°»á¿Í */
+        case 7: /* å‰ä¼šå®¢ */
             send_seat_position_set(3, 0);
             break;
 
-        case 9: /* ¹ıµÀ */
+        case 9: /* è¿‡é“ */
             send_seat_position_set(3, 2);
             break;
 
-        case 8: /* ºó»á¿Í */
+        case 8: /* åä¼šå®¢ */
             send_seat_position_set(3, 1);
             break;
 
-        case 6: /* ¶şÎ»¶Ë */
+        case 6: /* äºŒä½ç«¯ */
             send_seat_position_set(3, 4);
             break;
 
         default:
             break;
         }
-    } else if (screen_id == 6) { //»­Ãæ6 2F×ùÒÎµ¥¶Àµ÷Õû
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 6) { //ç”»é¢6 2Fåº§æ¤…å•ç‹¬è°ƒæ•´
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
-        case 3: /* ¼±Í£ */
+        case 3: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
-        case 5: /* Ò»Î»¶Ë */
+        case 5: /* ä¸€ä½ç«¯ */
             send_seat_position_set(4, 3);
             break;
 
-        case 7: /* Ç°»á¿Í */
+        case 7: /* å‰ä¼šå®¢ */
             send_seat_position_set(4, 0);
             break;
 
-        case 9: /* ¹ıµÀ */
+        case 9: /* è¿‡é“ */
             send_seat_position_set(4, 2);
             break;
 
-        case 8: /* ºó»á¿Í */
+        case 8: /* åä¼šå®¢ */
             send_seat_position_set(4, 1);
             break;
 
-        case 6: /* ¶şÎ»¶Ë */
+        case 6: /* äºŒä½ç«¯ */
             send_seat_position_set(4, 4);
             break;
 
         default:
             break;
         }
-    } else if (screen_id == 7) { //»­Ãæ7 3A×ùÒÎµ¥¶Àµ÷Õû
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 7) { //ç”»é¢7 3Aåº§æ¤…å•ç‹¬è°ƒæ•´
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
-        case 3: /* ¼±Í£ */
+        case 3: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
-        case 5: /* Ò»Î»¶Ë */
+        case 5: /* ä¸€ä½ç«¯ */
             send_seat_position_set(5, 3);
             break;
 
-        case 7: /* Ç°»á¿Í */
+        case 7: /* å‰ä¼šå®¢ */
             send_seat_position_set(5, 0);
             break;
 
-        case 9: /* ¹ıµÀ */
+        case 9: /* è¿‡é“ */
             send_seat_position_set(5, 2);
             break;
 
-        case 8: /* ºó»á¿Í */
+        case 8: /* åä¼šå®¢ */
             send_seat_position_set(5, 1);
             break;
 
-        case 6: /* ¶şÎ»¶Ë */
+        case 6: /* äºŒä½ç«¯ */
             send_seat_position_set(5, 4);
             break;
 
         default:
             break;
         }
-    } else if (screen_id == 8) { //»­Ãæ8 3F×ùÒÎµ¥¶Àµ÷Õû
-        if (state == 0)   // Ì§Æğ
+    } else if (screen_id == 8) { //ç”»é¢8 3Fåº§æ¤…å•ç‹¬è°ƒæ•´
+        if (state == 0)   // æŠ¬èµ·
             return;
         switch (control_id) {
-        case 3: /* ¼±Í£ */
+        case 3: /* æ€¥åœ */
             send_seat_rotation_estop();
             break;
 
-        case 5: /* Ò»Î»¶Ë */
+        case 5: /* ä¸€ä½ç«¯ */
             send_seat_position_set(6, 3);
             break;
 
-        case 7: /* Ç°»á¿Í */
+        case 7: /* å‰ä¼šå®¢ */
             send_seat_position_set(6, 0);
             break;
 
-        case 9: /* ¹ıµÀ */
+        case 9: /* è¿‡é“ */
             send_seat_position_set(6, 2);
             break;
 
-        case 8: /* ºó»á¿Í */
+        case 8: /* åä¼šå®¢ */
             send_seat_position_set(6, 1);
             break;
 
-        case 6: /* ¶şÎ»¶Ë */
+        case 6: /* äºŒä½ç«¯ */
             send_seat_position_set(6, 4);
             break;
 
@@ -319,14 +329,14 @@ static void dacai_notify_button(uint16 screen_id, uint16 control_id, uint8 state
     }
 }
 
-//ÆÁÄ»ÎÄ±¾»Øµ÷
+//å±å¹•æ–‡æœ¬å›è°ƒ
 static void dacai_notify_text(uint16 screen_id, uint16 control_id, uint8 *str)
 {
     float value = 0;
 
     sscanf((char *) str, "%f", &value);
 
-    if (screen_id == 0) { //»­Ãæ0
+    if (screen_id == 0) { //ç”»é¢0
         switch (control_id) {
         case 6:
             break;
@@ -337,11 +347,11 @@ static void dacai_notify_text(uint16 screen_id, uint16 control_id, uint8 *str)
 }
 
 /*!
-*  \brief  ½ø¶ÈÌõ¿Ø¼şÍ¨Öª
-*  \details  µ÷ÓÃGetControlValueÊ±£¬Ö´ĞĞ´Ëº¯Êı
-*  \param screen_id »­ÃæID
-*  \param control_id ¿Ø¼şID
-*  \param value Öµ
+*  \brief  è¿›åº¦æ¡æ§ä»¶é€šçŸ¥
+*  \details  è°ƒç”¨GetControlValueæ—¶ï¼Œæ‰§è¡Œæ­¤å‡½æ•°
+*  \param screen_id ç”»é¢ID
+*  \param control_id æ§ä»¶ID
+*  \param value å€¼
 */
 static void NotifyProgress(uint16 screen_id, uint16 control_id, uint32 value)
 {
@@ -351,9 +361,9 @@ static void NotifyProgress(uint16 screen_id, uint16 control_id, uint32 value)
 }
 
 /*!
-*  \brief  »­ÃæÇĞ»»Í¨Öª
-*  \details  µ±Ç°»­Ãæ¸Ä±äÊ±(»òµ÷ÓÃGetScreen)£¬Ö´ĞĞ´Ëº¯Êı
-*  \param screen_id µ±Ç°»­ÃæID
+*  \brief  ç”»é¢åˆ‡æ¢é€šçŸ¥
+*  \details  å½“å‰ç”»é¢æ”¹å˜æ—¶(æˆ–è°ƒç”¨GetScreen)ï¼Œæ‰§è¡Œæ­¤å‡½æ•°
+*  \param screen_id å½“å‰ç”»é¢ID
 */
 static void NotifyScreen(uint16 screen_id)
 {
@@ -363,20 +373,20 @@ static void NotifyScreen(uint16 screen_id)
 unsigned short Convert(unsigned short s)
 {
     char right, left;
-    right = s & 0XFF; // µÍ°ËÎ»
-    left = s >> 8;    // ¸ß°ËÎ»  ÓÒÒÆ8Î»
+    right = s & 0XFF; // ä½å…«ä½
+    left = s >> 8;    // é«˜å…«ä½  å³ç§»8ä½
     s = right * 256 + left;
     return s;
 }
 
-//´ó²ÊÊı¾İ½âÎö
+//å¤§å½©æ•°æ®è§£æ
 static void dacai_process_message(PCTRL_MSG msg, uint16 size)
 {
-    uint8 cmd_type = msg->cmd_type;               // Ö¸ÁîÀàĞÍ
-    uint8 ctrl_msg = msg->ctrl_msg;               // ÏûÏ¢µÄÀàĞÍ
-    uint8 control_type = msg->control_type;       // ¿Ø¼şÀàĞÍ
-    uint16 screen_id = Convert(msg->screen_id);   // »­ÃæID
-    uint16 control_id = Convert(msg->control_id); // ¿Ø¼şID
+    uint8 cmd_type = msg->cmd_type;               // æŒ‡ä»¤ç±»å‹
+    uint8 ctrl_msg = msg->ctrl_msg;               // æ¶ˆæ¯çš„ç±»å‹
+    uint8 control_type = msg->control_type;       // æ§ä»¶ç±»å‹
+    uint16 screen_id = Convert(msg->screen_id);   // ç”»é¢ID
+    uint16 control_id = Convert(msg->control_id); // æ§ä»¶ID
     uint32 value = PTR2U32(msg->param);
 
     switch (cmd_type) {
@@ -385,13 +395,13 @@ static void dacai_process_message(PCTRL_MSG msg, uint16 size)
             NotifyScreen(screen_id);
         } else if (ctrl_msg == MSG_GET_DATA) {
             switch (control_type) {
-            case kCtrlButton: // °´Å¥¿Ø¼ş
+            case kCtrlButton: // æŒ‰é’®æ§ä»¶
                 dacai_notify_button(screen_id, control_id, msg->param[1]);
                 break;
-            case kCtrlText: // ÎÄ±¾¿Ø¼ş
+            case kCtrlText: // æ–‡æœ¬æ§ä»¶
                 dacai_notify_text(screen_id, control_id, msg->param);
                 break;
-            case kCtrlProgress: // ½ø¶ÈÌõ
+            case kCtrlProgress: // è¿›åº¦æ¡
                 NotifyProgress(screen_id, control_id, value);
                 break;
             default:

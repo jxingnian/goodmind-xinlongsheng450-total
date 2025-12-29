@@ -2,19 +2,19 @@
 #include "string.h"
 
 
-/* ÂË²¨Æ÷¼ÆÊý */
+/* æ»¤æ³¢å™¨è®¡æ•° */
 uint8_t g_ucaIndex[FIL_NUM] = {0};
 
 float filtTemp[FIL_NUM][FILTER_N] = {0};
 
 /**
- * @brief ÖÐÎ»ÖµÆ½¾ùÂË²¨Ëã·¨
+ * @brief ä¸­ä½å€¼å¹³å‡æ»¤æ³¢ç®—æ³•
  *
- * @param value         ÊäÈëÖµ
- * @param num           ÉáÈ¥ÖµµÄÊýÁ¿
- * @param value_buf     »º´æÇø
- * @param _index        ÂË²¨Æ÷ÐòºÅ
- * @return float        Æ½¾ùÖµ
+ * @param value         è¾“å…¥å€¼
+ * @param num           èˆåŽ»å€¼çš„æ•°é‡
+ * @param value_buf     ç¼“å­˜åŒº
+ * @param _index        æ»¤æ³¢å™¨åºå·
+ * @return float        å¹³å‡å€¼
  */
 float filter(float value, int num, float value_buf[], uint8_t _index)
 {
@@ -26,7 +26,7 @@ float filter(float value, int num, float value_buf[], uint8_t _index)
         value_buf[g_ucaIndex[_index]] = value;
         g_ucaIndex[_index]++;
     } else {
-        for (j = FILTER_N - 1; j > 0; j--) { //µÝÍÆ
+        for (j = FILTER_N - 1; j > 0; j--) { //é€’æŽ¨
             value_buf[j] = value_buf[j - 1];
         }
         value_buf[0] = value;
@@ -39,7 +39,7 @@ float filter(float value, int num, float value_buf[], uint8_t _index)
         return (float)(sum / (g_ucaIndex[_index]));
     } else {
         memcpy(value_buf_tem, value_buf, FILTER_N * sizeof(float));
-        for (j = 0; j < FILTER_N - 1; j++) { //ÅÅÐò
+        for (j = 0; j < FILTER_N - 1; j++) { //æŽ’åº
             for (i = 0; i < FILTER_N - j - 1; i++) {
                 if (value_buf_tem[i] > value_buf_tem[i + 1]) {
                     temp = value_buf_tem[i];
@@ -48,7 +48,7 @@ float filter(float value, int num, float value_buf[], uint8_t _index)
                 }
             }
         }
-        for (int d = (num / 2); d < (FILTER_N - (num / 2)); d++) { //ÇóÖµ
+        for (int d = (num / 2); d < (FILTER_N - (num / 2)); d++) { //æ±‚å€¼
 //      cout << value_buf_tem[d] << "  ";
             sum += value_buf_tem[d];
         }

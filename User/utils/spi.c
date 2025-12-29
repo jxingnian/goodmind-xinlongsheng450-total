@@ -24,17 +24,17 @@
 #include "usart.h"
 
 /**
-  * @brief  ÅäÖÃÖ¸¶¨SPIµÄÒı½Å
+  * @brief  é…ç½®æŒ‡å®šSPIçš„å¼•è„š
   * @retval None
   */
 static void SPI_GPIO_Configuration(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 #if 1
-    //´ò¿ªÊ±ÖÓ
+    //æ‰“å¼€æ—¶é’Ÿ
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-    //´ò¿ª¶Ë¿Ú¸´ÓÃ
+    //æ‰“å¼€ç«¯å£å¤ç”¨
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource12, GPIO_AF_SPI2);
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_SPI2);
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_SPI2);
@@ -52,19 +52,19 @@ static void SPI_GPIO_Configuration(void)
     //PB15->MOSI
     GPIO_InitStruct.GPIO_Pin =  GPIO_Pin_15;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
-    //PB12->CS,³õÊ¼»¯Æ¬Ñ¡Êä³öÒı½Å
+    //PB12->CS,åˆå§‹åŒ–ç‰‡é€‰è¾“å‡ºå¼•è„š
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
-    //À­¸ßÆ¬Ñ¡
+    //æ‹‰é«˜ç‰‡é€‰
     GPIO_SetBits(GPIOB, GPIO_Pin_12);
 
 #else
-    //´ò¿ªÊ±ÖÓ
+    //æ‰“å¼€æ—¶é’Ÿ
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB, ENABLE);
 
-    //´ò¿ª¶Ë¿Ú¸´ÓÃ
+    //æ‰“å¼€ç«¯å£å¤ç”¨
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI1);
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_SPI1);
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
@@ -82,16 +82,16 @@ static void SPI_GPIO_Configuration(void)
     //PB5->MOSI
     GPIO_InitStruct.GPIO_Pin =  GPIO_Pin_5;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
-    //PA4->CS,³õÊ¼»¯Æ¬Ñ¡Êä³öÒı½Å
+    //PA4->CS,åˆå§‹åŒ–ç‰‡é€‰è¾“å‡ºå¼•è„š
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_Init(GPIOA, &GPIO_InitStruct);
-    //À­¸ßÆ¬Ñ¡
+    //æ‹‰é«˜ç‰‡é€‰
     GPIO_SetBits(GPIOA, GPIO_Pin_4);
 #endif
 }
 /**
-  * @brief  ¸ù¾İÍâ²¿SPIÉè±¸ÅäÖÃSPIÏà¹Ø²ÎÊı
+  * @brief  æ ¹æ®å¤–éƒ¨SPIè®¾å¤‡é…ç½®SPIç›¸å…³å‚æ•°
   * @retval None
   */
 void SPI_Configuration(void)
@@ -128,44 +128,44 @@ void SPI_Configuration(void)
 #endif
 }
 /**
-  * @brief  Ğ´1×Ö½ÚÊı¾İµ½SPI×ÜÏß
-  * @param  TxData Ğ´µ½×ÜÏßµÄÊı¾İ
+  * @brief  å†™1å­—èŠ‚æ•°æ®åˆ°SPIæ€»çº¿
+  * @param  TxData å†™åˆ°æ€»çº¿çš„æ•°æ®
   * @retval None
   */
 void SPI_WriteByte(uint8_t TxData)
 {
 #if 0
-    while ((SPI2->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //µÈ´ı·¢ËÍÇø¿Õ
-    SPI2->DR = TxData;                                                        //·¢ËÍÒ»¸öbyte
-    while ((SPI2->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //µÈ´ı½ÓÊÕÍêÒ»¸öbyte
+    while ((SPI2->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //ç­‰å¾…å‘é€åŒºç©º
+    SPI2->DR = TxData;                                                        //å‘é€ä¸€ä¸ªbyte
+    while ((SPI2->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //ç­‰å¾…æ¥æ”¶å®Œä¸€ä¸ªbyte
     SPI2->DR;
 #else
-    while ((SPI1->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //µÈ´ı·¢ËÍÇø¿Õ
-    SPI1->DR = TxData;                                          //·¢ËÍÒ»¸öbyte
-    while ((SPI1->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //µÈ´ı½ÓÊÕÍêÒ»¸öbyte
+    while ((SPI1->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //ç­‰å¾…å‘é€åŒºç©º
+    SPI1->DR = TxData;                                          //å‘é€ä¸€ä¸ªbyte
+    while ((SPI1->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //ç­‰å¾…æ¥æ”¶å®Œä¸€ä¸ªbyte
     SPI1->DR;
 #endif
 }
 /**
-  * @brief  ´ÓSPI×ÜÏß¶ÁÈ¡1×Ö½ÚÊı¾İ
-  * @retval ¶Áµ½µÄÊı¾İ
+  * @brief  ä»SPIæ€»çº¿è¯»å–1å­—èŠ‚æ•°æ®
+  * @retval è¯»åˆ°çš„æ•°æ®
   */
 uint8_t SPI_ReadByte(void)
 {
 #if 0
-    while ((SPI2->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //µÈ´ı·¢ËÍÇø¿Õ
-    SPI2->DR = 0xFF;                                            //·¢ËÍÒ»¸ö¿ÕÊı¾İ²úÉúÊäÈëÊı¾İµÄÊ±ÖÓ
-    while ((SPI2->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //µÈ´ı½ÓÊÕÍêÒ»¸öbyte
+    while ((SPI2->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //ç­‰å¾…å‘é€åŒºç©º
+    SPI2->DR = 0xFF;                                            //å‘é€ä¸€ä¸ªç©ºæ•°æ®äº§ç”Ÿè¾“å…¥æ•°æ®çš„æ—¶é’Ÿ
+    while ((SPI2->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //ç­‰å¾…æ¥æ”¶å®Œä¸€ä¸ªbyte
     return SPI2->DR;
 #else
-    while ((SPI1->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //µÈ´ı·¢ËÍÇø¿Õ
-    SPI1->DR = 0xFF;                                            //·¢ËÍÒ»¸ö¿ÕÊı¾İ²úÉúÊäÈëÊı¾İµÄÊ±ÖÓ
-    while ((SPI1->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //µÈ´ı½ÓÊÕÍêÒ»¸öbyte
+    while ((SPI1->SR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET); //ç­‰å¾…å‘é€åŒºç©º
+    SPI1->DR = 0xFF;                                            //å‘é€ä¸€ä¸ªç©ºæ•°æ®äº§ç”Ÿè¾“å…¥æ•°æ®çš„æ—¶é’Ÿ
+    while ((SPI1->SR & SPI_I2S_FLAG_RXNE) == (uint16_t)RESET); //ç­‰å¾…æ¥æ”¶å®Œä¸€ä¸ªbyte
     return SPI1->DR;
 #endif
 }
 /**
-  * @brief  ½øÈëÁÙ½çÇø
+  * @brief  è¿›å…¥ä¸´ç•ŒåŒº
   * @retval None
   */
 void SPI_CrisEnter(void)
@@ -173,7 +173,7 @@ void SPI_CrisEnter(void)
     __set_PRIMASK(1);
 }
 /**
-  * @brief  ÍË³öÁÙ½çÇø
+  * @brief  é€€å‡ºä¸´ç•ŒåŒº
   * @retval None
   */
 void SPI_CrisExit(void)
@@ -182,7 +182,7 @@ void SPI_CrisExit(void)
 }
 
 /**
-  * @brief  Æ¬Ñ¡ĞÅºÅÊä³öµÍµçÆ½
+  * @brief  ç‰‡é€‰ä¿¡å·è¾“å‡ºä½ç”µå¹³
   * @retval None
   */
 void SPI_CS_Select(void)
@@ -194,7 +194,7 @@ void SPI_CS_Select(void)
 #endif
 }
 /**
-  * @brief  Æ¬Ñ¡ĞÅºÅÊä³ö¸ßµçÆ½
+  * @brief  ç‰‡é€‰ä¿¡å·è¾“å‡ºé«˜ç”µå¹³
   * @retval None
   */
 void SPI_CS_Deselect(void)
