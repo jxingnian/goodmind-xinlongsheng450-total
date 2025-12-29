@@ -2,7 +2,7 @@
  * @Author: 星年 && j_xingnian@163.com
  * @Date: 2025-12-29 11:26:09
  * @LastEditors: xingnian j_xingnian@163.com
- * @LastEditTime: 2025-12-29 13:16:15
+ * @LastEditTime: 2025-12-29 13:35:48
  * @FilePath: \goodmind-xinlongsheng450-total\User\bsp\bsp_hmi\bsp_hmi.c
  * @Description: 
  * 
@@ -15,6 +15,7 @@
 #include "hmi_driver.h"
 #include "usart.h"
 #include "app.h"
+#include "logic_proc.h"
 
 static void dacai_process_message(PCTRL_MSG msg, uint16 size);
 static void dacai_notify_button(uint16 screen_id, uint16 control_id, uint8 state);
@@ -28,7 +29,7 @@ static void NotifyScreen(uint16 screen_id);
 //};
 
 static tmr_t tmr_dacai_handle;
-// static uint16_t s_ul_hmi_cur_screen_id = 0;
+static uint16_t s_cur_screen_id = 0;
 
 //大彩数据处理
 static void tmr_dacai_handle_callback(int timer_id, void *data)
@@ -46,7 +47,7 @@ static void tmr_dacai_handle_callback(int timer_id, void *data)
 
     /* 200ms更新 */
     if (time_count % 20 == 0) {
-        ;
+        // TODO: 大彩屏状态显示更新
     }
 
     /* 1s 更新 */
@@ -367,7 +368,7 @@ static void NotifyProgress(uint16 screen_id, uint16 control_id, uint32 value)
 */
 static void NotifyScreen(uint16 screen_id)
 {
-    // s_ul_hmi_cur_screen_id = screen_id;
+    s_cur_screen_id = screen_id;
 }
 
 unsigned short Convert(unsigned short s)
